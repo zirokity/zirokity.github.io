@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Manager Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #5865F2;
+            --primary-dark: #4752c4;
+            --success: #43B581;
+            --success-dark: #3a9a6e;
+            --danger: #F04747;
+            --danger-dark: #d63a3a;
+            --warning: #FAA61A;
+            --warning-dark: #e09517;
+            --info: #5865F2;
+            --bg-light: #1e1f22;
+            --bg-dark: #131417;
+            --card-bg: #232428;
+            --text-primary: #ffffff;
+            --text-secondary: #b9bbbe;
+            --border-color: #4f545c;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dark-theme {
+            --bg-light: #131417;
+            --bg-dark: #0a0b0e;
+            --card-bg: #1e1f22;
+            --text-primary: #ffffff;
+            --text-secondary: #b9bbbe;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+            height: 90vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .nav-item {
+            padding: 12px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(88, 101, 242, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: rgba(88, 101, 242, 0.2);
+            color: var(--primary);
+            box-shadow: 0 0 10px rgba(88, 101, 242, 0.3);
+        }
+
+        .nav-item i {
+            font-size: 1.2em;
+            width: 24px;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            margin-top: auto;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .card-header h3 {
+            color: var(--primary);
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: var(--text-primary);
+            font-size: 1em;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: var(--success-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 181, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 71, 71, 0.4);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: var(--warning-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(250, 166, 26, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Embed Builder */
+        .embed-builder {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .embed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .embed-toggle {
+            background: rgba(88, 101, 242, 0.2);
+            border: none;
+            color: var(--primary);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .embed-toggle:hover {
+            background: rgba(88, 101, 242, 0.3);
+        }
+
+        .embed-form {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .embed-form.active {
+            display: flex;
+        }
+
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+        }
+
+        .fields-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .field-input {
+            flex: 1;
+        }
+
+        .btn-add-field {
+            background: rgba(67, 181, 129, 0.2);
+            border: none;
+            color: var(--success);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-add-field:hover {
+            background: rgba(67, 181, 129, 0.3);
+        }
+
+        .btn-remove {
+            background: rgba(240, 71, 71, 0.2);
+            border: none;
+            color: var(--danger);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .btn-remove:hover {
+            background: rgba(240, 71, 71, 0.3);
+        }
+
+        /* Mention Buttons */
+        .mentions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .mention-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: var(--transition);
+        }
+
+        .mention-btn:hover {
+            background: rgba(88, 101, 242, 0.2);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Character Counter */
+        .char-counter {
+            text-align: right;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .char-counter.warning {
+            color: var(--warning);
+        }
+
+        .char-counter.danger {
+            color: var(--danger);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--card-bg);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.info {
+            border-left-color: var(--info);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        /* History Panel */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 12px 15px;
+            border-left: 3px solid var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .history-item.success {
+            border-left-color: var(--success);
+        }
+
+        .history-item.error {
+            border-left-color: var(--danger);
+        }
+
+        .history-item .time {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 10px;
+            }
+
+            .nav-item span {
+                display: none;
+            }
+
+            .sidebar-header {
+                display: none;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(88, 101, 242, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(88, 101, 242, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-robot"></i> Webhook Pro</h2>
+            </div>
+            <div class="nav-item active" data-tab="sender">
+                <i class="fas fa-paper-plane"></i>
+                <span>Wysyłanie</span>
+            </div>
+            <div class="nav-item" data-tab="embeds">
+                <i class="fas fa-code"></i>
+                <span>Embed Builder</span>
+            </div>
+            <div class="nav-item" data-tab="history">
+                <i class="fas fa-history"></i>
+                <span>Historia</span>
+            </div>
+            <div class="nav-item" data-tab="settings">
+                <i class="fas fa-cog"></i>
+                <span>Ustawienia</span>
+            </div>
+            <div class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+                <span>Dark Mode</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sender Tab -->
+            <div class="card" id="senderTab">
+                <div class="card-header">
+                    <h3><i class="fas fa-paper-plane"></i> Wysyłanie Wiadomości</h3>
+                    <div class="char-counter" id="charCounter">0/2000</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="webhookUrl"><i class="fas fa-link"></i> URL Webhooka:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="url" id="webhookUrl" class="form-control" placeholder="https://discord.com/api/webhooks/..." required>
+                            <button class="btn btn-outline" onclick="copyWebhook()" title="Kopiuj">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="btn btn-outline" onclick="loadSavedWebhook()" title="Załaduj zapisany">
+                                <i class="fas fa-folder-open"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user"></i> Nazwa użytkownika:</label>
+                        <input type="text" id="username" class="form-control" placeholder="Twój bot" value="Webhook Bot">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="avatarUrl"><i class="fas fa-image"></i> URL avatara:</label>
+                        <input type="url" id="avatarUrl" class="form-control" placeholder="https://example.com/avatar.png">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message"><i class="fas fa-comment"></i> Treść wiadomości:</label>
+                        <textarea id="message" class="form-control" placeholder="Wpisz swoją wiadomość tutaj..." oninput="updateCharCounter()"></textarea>
+                        <div class="mentions">
+                            <button class="mention-btn" onclick="addMention('@everyone')">@everyone</button>
+                            <button class="mention-btn" onclick="addMention('@here')">@here</button>
+                            <button class="mention-btn" onclick="addCustomMention()">@Custom</button>
+                        </div>
+                    </div>
+
+                    <div class="embed-builder">
+                        <div class="embed-header">
+                            <span style="color: var(--text-secondary);"><i class="fas fa-code"></i> Zaawansowane: Embed</span>
+                            <button class="embed-toggle" onclick="toggleEmbedForm()">+ Dodaj Embed</button>
+                        </div>
+                        <div class="embed-form" id="embedForm">
+                            <div class="form-group">
+                                <label><i class="fas fa-palette"></i> Kolor embeda:</label>
+                                <div class="color-picker">
+                                    <input type="color" id="embedColor" class="form-control" style="width: auto; padding: 5px;" value="#5865F2" onchange="updateColorPreview()">
+                                    <div class="color-preview" id="colorPreview"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-heading"></i> Tytuł:</label>
+                                <input type="text" id="embedTitle" class="form-control" placeholder="Tytuł embeda">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-align-left"></i> Opis:</label>
+                                <textarea id="embedDescription" class="form-control" placeholder="Opis embeda"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-link"></i> URL (klikalny tytuł):</label>
+                                <input type="url" id="embedUrl" class="form-control" placeholder="https://example.com">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-th-large"></i> Pola (Fields):</label>
+                                <div class="fields-container" id="fieldsContainer">
+                                    <!-- Fields will be added here -->
+                                </div>
+                                <button class="btn-add-field" onclick="addField()">
+                                    <i class="fas fa-plus"></i> Dodaj pole
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-image"></i> Miniaturka (Thumbnail URL):</label>
+                                <input type="url" id="embedThumbnail" class="form-control" placeholder="https://example.com/thumb.png">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-image"></i> Obrazek (Image URL):</label>
+                                <input type="url" id="embedImage" class="form-control" placeholder="https://example.com/image.png">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-signature"></i> Footer:</label>
+                                <input type="text" id="embedFooter" class="form-control" placeholder="Tekst w stopce">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i> Wyślij
+                        </button>
+                        <button class="btn btn-success" onclick="testWebhook()">
+                            <i class="fas fa-plug"></i> Testuj
+                        </button>
+                        <button class="btn btn-warning" onclick="previewMessage()">
+                            <i class="fas fa-eye"></i> Podgląd
+                        </button>
+                        <button class="btn btn-danger" onclick="clearForm()">
+                            <i class="fas fa-trash"></i> Wyczyść
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Embed Tab -->
+            <div class="card" id="embedsTab" style="display: none;">
+                <div class="card-header">
+                    <h3><i class="fas fa-code"></i> Embed Builder</h3>
+                </div>
+                <div class="card-body">
+                    <p style="color: var(--text-secondary);">Tutaj możesz tworzyć zaawansowane embedy z wieloma polami, obrazkami i kolorami.</p>
+                    <div style="margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.03); border-radius: 10px;">
+                        <h4 style="color: var(--primary); margin-bottom: 15px;"><i class="fas fa-info-circle"></i> Instrukcje:</h4>
+                        <ul style="color: var(--text-secondary); line-height: 1.8;">
+                            <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Kliknij "+ Dodaj Embed" w zakładce Wysyłanie</li>
+                            <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Wypełnij pola embeda</li>
+                            <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Możesz dodać wiele pól (fields)</li>
+                            <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Wybierz kolor za pomocą picker'a</li>
+                            <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Wysyłaj jak zwykłą wiadomość</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div class="card" id="historyTab" style="display: none;">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Historia Wiadomości</h3>
+                    <button class="btn btn-danger btn-outline" onclick="clearHistory()" style="padding: 8px 15px; font-size: 0.85em;">
+                        <i class="fas fa-trash"></i> Wyczyść historię
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="history-list" id="historyList">
+                        <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                            Brak historii wysyłania
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="card" id="settingsTab" style="display: none;">
+                <div class="card-header">
+                    <h3><i class="fas fa-cog"></i> Ustawienia</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label><i class="fas fa-save"></i> Zapisz webhook URL:</label>
+                        <button class="btn btn-primary" onclick="saveWebhook()" style="width: 100%;">
+                            <i class="fas fa-save"></i> Zapisz aktualny webhook
+                        </button>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label><i class="fas fa-bolt"></i> Szybkie akcje:</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                            <button class="btn btn-outline" onclick="loadExample1()">
+                                <i class="fas fa-robot"></i> Przykład 1
+                            </button>
+                            <button class="btn btn-outline" onclick="loadExample2()">
+                                <i class="fas fa-chart-line"></i> Przykład 2
+                            </button>
+                            <button class="btn btn-outline" onclick="loadExample3()">
+                                <i class="fas fa-bell"></i> Przykład 3
+                            </button>
+                            <button class="btn btn-outline" onclick="resetSettings()">
+                                <i class="fas fa-sync"></i> Resetuj
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const themeIcon = themeToggle.querySelector('i');
+
+        // Load saved theme
+        if (localStorage.getItem('darkMode') === 'true') {
+            body.classList.add('dark-theme');
+            themeIcon.className = 'fas fa-sun';
+            themeToggle.querySelector('span').textContent = 'Light Mode';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            const isDark = body.classList.contains('dark-theme');
+            localStorage.setItem('darkMode', isDark);
+            themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            themeToggle.querySelector('span').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        });
+
+        // Tab Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                // Remove active class from all
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                // Add active to clicked
+                item.classList.add('active');
+                
+                // Hide all tabs
+                document.querySelectorAll('.card').forEach(tab => {
+                    tab.style.display = 'none';
+                });
+                
+                // Show selected tab
+                const tabName = item.getAttribute('data-tab');
+                document.getElementById(tabName + 'Tab').style.display = 'flex';
+            });
+        });
+
+        // Character Counter
+        function updateCharCounter() {
+            const message = document.getElementById('message').value;
+            const counter = document.getElementById('charCounter');
+            const length = message.length;
+            
+            counter.textContent = `${length}/2000`;
+            
+            if (length > 1800) {
+                counter.className = 'char-counter danger';
+            } else if (length > 1500) {
+                counter.className = 'char-counter warning';
+            } else {
+                counter.className = 'char-counter';
+            }
+        }
+
+        // Embed Form Toggle
+        function toggleEmbedForm() {
+            const form = document.getElementById('embedForm');
+            form.classList.toggle('active');
+            
+            const button = event.currentTarget;
+            if (form.classList.contains('active')) {
+                button.innerHTML = '<i class="fas fa-minus"></i> Ukryj Embed';
+            } else {
+                button.innerHTML = '<i class="fas fa-plus"></i> Dodaj Embed';
+            }
+        }
+
+        // Color Preview
+        function updateColorPreview() {
+            const color = document.getElementById('embedColor').value;
+            document.getElementById('colorPreview').style.backgroundColor = color;
+        }
+        updateColorPreview();
+
+        // Add Field
+        function addField() {
+            const container = document.getElementById('fieldsContainer');
+            const fieldId = Date.now();
+            
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'field-row';
+            fieldDiv.innerHTML = `
+                <input type="text" placeholder="Nazwa pola" class="form-control field-input field-name-${fieldId}">
+                <input type="text" placeholder="Wartość pola" class="form-control field-input field-value-${fieldId}">
+                <button class="btn-remove" onclick="removeField(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(fieldDiv);
+        }
+
+        function removeField(button) {
+            button.parentElement.remove();
+        }
+
+        // Mentions
+        function addMention(mention) {
+            const messageInput = document.getElementById('message');
+            messageInput.value += mention + ' ';
+            messageInput.focus();
+        }
+
+        function addCustomMention() {
+            const mentionType = prompt('Typ wspomnienia:\n1. Użytkownik (@user)\n2. Rola (@role)\n3. Kanał (#channel)', '1');
+            
+            if (!mentionType) return;
+            
+            let id = prompt('Wprowadź ID:');
+            if (!id) return;
+            
+            let mention = '';
+            switch(mentionType) {
+                case '1':
+                    mention = `<@${id}>`;
+                    break;
+                case '2':
+                    mention = `<@&${id}>`;
+                    break;
+                case '3':
+                    mention = `<#${id}>`;
+                    break;
+                default:
+                    mention = `<@${id}>`;
+            }
+            
+            addMention(mention);
+        }
+
+        // Send Message
+        function sendMessage() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const username = document.getElementById('username').value;
+            const avatarUrl = document.getElementById('avatarUrl').value;
+            const message = document.getElementById('message').value;
+
+            if (!webhookUrl) {
+                showToast('Proszę wprowadzić URL webhooka!', 'error');
+                return;
+            }
+
+            if (!message && !document.getElementById('embedForm').classList.contains('active')) {
+                showToast('Proszę wpisać wiadomość lub dodać embed!', 'error');
+                return;
+            }
+
+            showToast('Wysyłanie wiadomości...', 'info');
+
+            const payload = {
+                content: message || null,
+                username: username || 'Webhook Bot',
+                avatar_url: avatarUrl || null
+            };
+
+            // Add embed if form is active
+            if (document.getElementById('embedForm').classList.contains('active')) {
+                const embed = buildEmbed();
+                if (embed) {
+                    payload.embeds = [embed];
+                }
+            }
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('✅ Wiadomość została wysłana pomyślnie!', 'success');
+                    addToHistory('Wiadomość wysłana', 'success');
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Błąd ${response.status}`);
+                    });
+                }
+            })
+            .catch(error => {
+                showToast(`❌ Błąd: ${error.message}`, 'error');
+                addToHistory('Błąd wysyłania', 'error');
+            });
+        }
+
+        // Build Embed
+        function buildEmbed() {
+            const title = document.getElementById('embedTitle').value;
+            const description = document.getElementById('embedDescription').value;
+            const url = document.getElementById('embedUrl').value;
+            const color = hexToDecimal(document.getElementById('embedColor').value);
+            const thumbnail = document.getElementById('embedThumbnail').value;
+            const image = document.getElementById('embedImage').value;
+            const footer = document.getElementById('embedFooter').value;
+
+            if (!title && !description) {
+                showToast('Embed musi mieć tytuł lub opis!', 'warning');
+                return null;
+            }
+
+            const embed = {
+                title: title || null,
+                description: description || null,
+                url: url || null,
+                color: color,
+                fields: getFields(),
+                thumbnail: thumbnail ? { url: thumbnail } : null,
+                image: image ? { url: image } : null,
+                footer: footer ? { text: footer } : null
+            };
+
+            // Remove null values
+            Object.keys(embed).forEach(key => {
+                if (embed[key] === null) delete embed[key];
+            });
+
+            return embed;
+        }
+
+        function getFields() {
+            const fields = [];
+            document.querySelectorAll('.field-row').forEach(row => {
+                const nameInput = row.querySelector('input:first-child');
+                const valueInput = row.querySelector('input:nth-child(2)');
+                
+                if (nameInput.value && valueInput.value) {
+                    fields.push({
+                        name: nameInput.value,
+                        value: valueInput.value,
+                        inline: false
+                    });
+                }
+            });
+            return fields;
+        }
+
+        function hexToDecimal(hex) {
+            return parseInt(hex.replace('#', ''), 16);
+        }
+
+        // Test Webhook
+        function testWebhook() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+
+            if (!webhookUrl) {
+                showToast('Proszę wprowadzić URL webhooka!', 'error');
+                return;
+            }
+
+            showToast('🔌 Testowanie połączenia...', 'info');
+
+            const testMessage = `🔧 **Test webhooka**\n\`\`\`\nCzas: ${new Date().toLocaleString('pl-PL')}\nStatus: Działa! ✅\n\`\`\``;
+            const payload = {
+                content: testMessage,
+                username: '🔧 Test Bot',
+                embeds: [{
+                    title: '✅ Webhook Test',
+                    description: 'Połączenie działa poprawnie!',
+                    color: 4360181, // Green
+                    footer: {
+                        text: `Testowany: ${new Date().toLocaleString('pl-PL')}`
+                    }
+                }]
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('✅ Webhook działa poprawnie!', 'success');
+                    addToHistory('Test webhooka - sukces', 'success');
+                } else {
+                    throw new Error(`Błąd ${response.status}`);
+                }
+            })
+            .catch(error => {
+                showToast(`❌ Błąd webhooka: ${error.message}`, 'error');
+                addToHistory('Test webhooka - błąd', 'error');
+            });
+        }
+
+        // Preview Message
+        function previewMessage() {
+            const message = document.getElementById('message').value;
+            const hasEmbed = document.getElementById('embedForm').classList.contains('active');
+            
+            if (!message && !hasEmbed) {
+                showToast('Nic do podglądu!', 'warning');
+                return;
+            }
+
+            let preview = '📋 **Podgląd wiadomości:**\n\n';
+            
+            if (message) {
+                preview += `**Treść:**\n${message}\n\n`;
+            }
+            
+            if (hasEmbed) {
+                preview += `**Embed:** ✅\n`;
+                const title = document.getElementById('embedTitle').value;
+                const desc = document.getElementById('embedDescription').value;
+                if (title) preview += `• Tytuł: ${title}\n`;
+                if (desc) preview += `• Opis: ${desc.substring(0, 50)}...\n`;
+            }
+
+            alert(preview);
+            showToast('Podgląd wyświetlony w alert!', 'info');
+        }
+
+        // Copy Webhook
+        function copyWebhook() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            if (!webhookUrl) {
+                showToast('Brak webhooka do skopiowania!', 'warning');
+                return;
+            }
+            
+            navigator.clipboard.writeText(webhookUrl).then(() => {
+                showToast('✅ Webhook skopiowany do schowka!', 'success');
+            });
+        }
+
+        // Clear Form
+        function clearForm() {
+            document.getElementById('message').value = '';
+            document.getElementById('username').value = 'Webhook Bot';
+            document.getElementById('avatarUrl').value = '';
+            document.getElementById('embedForm').classList.remove('active');
+            document.querySelectorAll('.field-row').forEach(row => row.remove());
+            document.getElementById('embedTitle').value = '';
+            document.getElementById('embedDescription').value = '';
+            document.getElementById('embedUrl').value = '';
+            document.getElementById('embedThumbnail').value = '';
+            document.getElementById('embedImage').value = '';
+            document.getElementById('embedFooter').value = '';
+            document.getElementById('embedColor').value = '#5865F2';
+            updateCharCounter();
+            showToast('Formularz wyczyszczony!', 'info');
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type} show`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // History
+        function addToHistory(message, type) {
+            const historyList = document.getElementById('historyList');
+            
+            // Remove "Brak historii" message if exists
+            if (historyList.querySelector('p')) {
+                historyList.innerHTML = '';
+            }
+            
+            const historyItem = document.createElement('div');
+            historyItem.className = `history-item ${type}`;
+            historyItem.innerHTML = `
+                <strong>${message}</strong>
+                <div class="time">${new Date().toLocaleTimeString('pl-PL')}</div>
+            `;
+            
+            historyList.insertBefore(historyItem, historyList.firstChild);
+            
+            // Save to localStorage
+            let history = JSON.parse(localStorage.getItem('webhookHistory') || '[]');
+            history.unshift({
+                message: message,
+                type: type,
+                time: new Date().toLocaleString('pl-PL')
+            });
+            
+            // Keep only last 50 items
+            if (history.length > 50) {
+                history = history.slice(0, 50);
+            }
+            
+            localStorage.setItem('webhookHistory', JSON.stringify(history));
+        }
+
+        function clearHistory() {
+            document.getElementById('historyList').innerHTML = `
+                <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                    Brak historii wysyłania
+                </p>
+            `;
+            localStorage.removeItem('webhookHistory');
+            showToast('Historia wyczyszczona!', 'success');
+        }
+
+        // Load History on Startup
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('webhookHistory') || '[]');
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length === 0) return;
+            
+            historyList.innerHTML = '';
+            
+            history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item ${item.type}`;
+                historyItem.innerHTML = `
+                    <strong>${item.message}</strong>
+                    <div class="time">${item.time}</div>
+                `;
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // Save/Load Webhook URL
+        function saveWebhook() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            if (!webhookUrl) {
+                showToast('Brak webhooka do zapisania!', 'warning');
+                return;
+            }
+            
+            localStorage.setItem('savedWebhook', webhookUrl);
+            showToast('✅ Webhook zapisany!', 'success');
+        }
+
+        function loadSavedWebhook() {
+            const savedWebhook = localStorage.getItem('savedWebhook');
+            if (savedWebhook) {
+                document.getElementById('webhookUrl').value = savedWebhook;
+                showToast('✅ Webhook załadowany!', 'success');
+            } else {
+                showToast('Brak zapisanego webhooka!', 'warning');
+            }
+        }
+
+        // Example Loads
+        function loadExample1() {
+            document.getElementById('username').value = '🔔 Powiadomienia Bot';
+            document.getElementById('message').value = 'Hej @everyone!\n\nNowa aktualizacja jest dostępna!';
+            document.getElementById('embedForm').classList.add('active');
+            document.getElementById('embedTitle').value = '🎉 Nowa Aktualizacja!';
+            document.getElementById('embedDescription').value = 'Sprawdź co nowego w najnowszej wersji!';
+            document.getElementById('embedColor').value = '#5865F2';
+            updateColorPreview();
+            addField();
+            document.querySelector('.field-name-1').value = 'Co nowego?';
+            document.querySelector('.field-value-1').value = '• Naprawiono błędy\n• Dodano nowe funkcje\n• Zoptymalizowano wydajność';
+            showToast('Przykład 1 załadowany!', 'success');
+        }
+
+        function loadExample2() {
+            document.getElementById('username').value = '📊 Statystyki Bot';
+            document.getElementById('message').value = '';
+            document.getElementById('embedForm').classList.add('active');
+            document.getElementById('embedTitle').value = '📈 Dzienne statystyki';
+            document.getElementById('embedDescription').value = 'Podsumowanie dzisiejszej aktywności';
+            document.getElementById('embedColor').value = '#43B581';
+            updateColorPreview();
+            
+            // Clear existing fields
+            document.querySelectorAll('.field-row').forEach(row => row.remove());
+            
+            addField();
+            document.querySelector('.field-name-1').value = 'Aktywni użytkownicy';
+            document.querySelector('.field-value-1').value = '1,245';
+            
+            addField();
+            document.querySelector('.field-name-2').value = 'Wysłane wiadomości';
+            document.querySelector('.field-value-2').value = '8,932';
+            
+            addField();
+            document.querySelector('.field-name-3').value = 'Nowi członkowie';
+            document.querySelector('.field-value-3').value = '23';
+            
+            document.getElementById('embedFooter').value = 'Statystyki z dnia: ' + new Date().toLocaleDateString('pl-PL');
+            showToast('Przykład 2 załadowany!', 'success');
+        }
+
+        function loadExample3() {
+            document.getElementById('username').value = '⚠️ Alert Bot';
+            document.getElementById('message').value = '@here\n\nUwaga! Serwer będzie niedostępny w związku z konserwacją.';
+            document.getElementById('embedForm').classList.add('active');
+            document.getElementById('embedTitle').value = '🔧 Konserwacja Serwera';
+            document.getElementById('embedDescription').value = 'Planowana przerwa techniczna';
+            document.getElementById('embedColor').value = '#FAA61A';
+            updateColorPreview();
+            
+            document.querySelectorAll('.field-row').forEach(row => row.remove());
+            
+            addField();
+            document.querySelector('.field-name-1').value = 'Data';
+            document.querySelector('.field-value-1').value = 'Dzisiaj, 22:00 - 23:30';
+            
+            addField();
+            document.querySelector('.field-name-2').value = 'Powód';
+            document.querySelector('.field-value-2').value = 'Aktualizacja oprogramowania';
+            
+            document.getElementById('embedFooter').value = 'Przepraszamy za utrudnienia';
+            showToast('Przykład 3 załadowany!', 'success');
+        }
+
+        function resetSettings() {
+            if (confirm('Czy na pewno chcesz zresetować wszystkie ustawienia?')) {
+                localStorage.removeItem('savedWebhook');
+                localStorage.removeItem('webhookHistory');
+                localStorage.removeItem('darkMode');
+                location.reload();
+            }
+        }
+
+        // Initialize
+        loadHistory();
+        updateCharCounter();
+
+        // Load saved webhook on startup
+        window.addEventListener('load', () => {
+            const savedWebhook = localStorage.getItem('savedWebhook');
+            if (savedWebhook) {
+                document.getElementById('webhookUrl').value = savedWebhook;
+            }
+        });
+    </script>
+</body>
+</html>
