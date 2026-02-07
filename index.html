@@ -1,1 +1,359 @@
-....................
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #5865F2;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #5865F2;
+            box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-send {
+            background: #5865F2;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-test {
+            background: #43B581;
+            color: white;
+        }
+
+        .btn-test:hover {
+            background: #3a9a6e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 181, 129, 0.4);
+        }
+
+        .btn-clear {
+            background: #F04747;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #d63a3a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 71, 71, 0.4);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+        .features {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .features ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .features li {
+            padding: 8px 0;
+            color: #555;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .features li:last-child {
+            border-bottom: none;
+        }
+
+        .features li:before {
+            content: "✓";
+            color: #43B581;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Discord Webhook Manager</h1>
+            <p>Wysyłaj wiadomości do swojego Discord webhooka</p>
+        </div>
+
+        <div class="form-group">
+            <label for="webhookUrl">URL Webhooka:</label>
+            <input type="url" id="webhookUrl" placeholder="https://discord.com/api/webhooks/..." required>
+        </div>
+
+        <div class="form-group">
+            <label for="username">Nazwa użytkownika (opcjonalnie):</label>
+            <input type="text" id="username" placeholder="Twój bot">
+        </div>
+
+        <div class="form-group">
+            <label for="avatarUrl">URL avatara (opcjonalnie):</label>
+            <input type="url" id="avatarUrl" placeholder="https://example.com/avatar.png">
+        </div>
+
+        <div class="form-group">
+            <label for="message">Treść wiadomości:</label>
+            <textarea id="message" placeholder="Wpisz swoją wiadomość tutaj..." required></textarea>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn btn-send" onclick="sendMessage()">Wyślij Wiadomość</button>
+            <button class="btn btn-test" onclick="testWebhook()">Testuj Webhook</button>
+            <button class="btn btn-clear" onclick="clearForm()">Wyczyść</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="features">
+            <h3>Funkcje:</h3>
+            <ul>
+                <li>Wysyłanie wiadomości do Discord webhooka</li>
+                <li>Personalizacja nazwy użytkownika</li>
+                <li>Dodawanie własnego avatara</li>
+                <li>Testowanie połączenia z webhookiem</li>
+                <li>Łatwa w użyciu interfejs</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const username = document.getElementById('username').value;
+            const avatarUrl = document.getElementById('avatarUrl').value;
+            const message = document.getElementById('message').value;
+
+            if (!webhookUrl || !message) {
+                showStatus('Proszę wypełnić wymagane pola!', 'error');
+                return;
+            }
+
+            showStatus('Wysyłanie wiadomości...', 'loading');
+
+            const payload = {
+                content: message,
+                username: username || 'Webhook Bot',
+                avatar_url: avatarUrl || ''
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showStatus('Wiadomość została wysłana pomyślnie!', 'success');
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Błąd ${response.status}: ${text}`);
+                    });
+                }
+            })
+            .catch(error => {
+                showStatus(`Błąd: ${error.message}`, 'error');
+            });
+        }
+
+        function testWebhook() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+
+            if (!webhookUrl) {
+                showStatus('Proszę wprowadzić URL webhooka!', 'error');
+                return;
+            }
+
+            showStatus('Testowanie połączenia...', 'loading');
+
+            const testMessage = `🔌 Test webhooka - ${new Date().toLocaleString('pl-PL')}`;
+            const payload = {
+                content: testMessage,
+                username: 'Test Bot',
+                avatar_url: ''
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showStatus('✅ Webhook działa poprawnie!', 'success');
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Błąd ${response.status}: ${text}`);
+                    });
+                }
+            })
+            .catch(error => {
+                showStatus(`❌ Błąd webhooka: ${error.message}`, 'error');
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('webhookUrl').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('avatarUrl').value = '';
+            document.getElementById('message').value = '';
+            document.getElementById('status').style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
