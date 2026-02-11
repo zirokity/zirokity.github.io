@@ -1,653 +1,559 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>📡 Propagacja dla Polski</title>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            body {
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                color: #fff;
-                padding: 20px;
-                min-height: 100vh;
-            }
-            .container {
-                max-width: 900px;
-                margin: 0 auto;
-                background: rgba(30, 30, 50, 0.9);
-                border-radius: 15px;
-                padding: 30px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                border: 2px solid #4cc9f0;
-            }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📡 Propagacja dla Polski</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(30, 30, 50, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid #4cc9f0;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4cc9f0;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #4cc9f0;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+        }
+        .subtitle {
+            color: #aaa;
+            font-size: 1.1em;
+        }
+        .clock {
+            text-align: right;
+            background: rgba(40, 40, 70, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 2px solid #4cc9f0;
+            min-width: 250px;
+        }
+        .clock-time {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #4cc9f0;
+            margin-bottom: 5px;
+        }
+        .clock-date {
+            font-size: 1em;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        .clock-utc {
+            font-size: 1.2em;
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        .data-source {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+            font-size: 0.8em;
+            color: #777;
+        }
+        .data-source.live { color: #4ade80; }
+        .data-source.mock { color: #fbbf24; }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(40, 40, 70, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4cc9f0;
+        }
+        .status-item {
+            text-align: center;
+            flex: 1;
+        }
+        .status-label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        .status-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .sfi-good { color: #4ade80; }
+        .sfi-medium { color: #fbbf24; }
+        .sfi-bad { color: #f87171; }
+        .kindex-good { color: #4ade80; }
+        .kindex-medium { color: #fbbf24; }
+        .kindex-bad { color: #f87171; }
+        .bands {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .band {
+            background: rgba(50, 50, 80, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .band:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .band-label {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .band-status {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .band-good { 
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: #fff;
+            border-color: #22c55e;
+        }
+        .band-medium { 
+            background: linear-gradient(135deg, #ca8a04 0%, #b45309 100%);
+            color: #fff;
+            border-color: #f59e0b;
+        }
+        .band-bad { 
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+            color: #fff;
+            border-color: #ef4444;
+        }
+        .refresh-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            transform: scale(1.02);
+        }
+        .info {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(70, 70, 100, 0.3);
+            border-radius: 10px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        .info h3 {
+            color: #4cc9f0;
+            margin-bottom: 10px;
+        }
+        .info ul {
+            margin-left: 20px;
+        }
+        .info li {
+            margin-bottom: 5px;
+        }
+        .sources {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(80, 40, 120, 0.3);
+            border-radius: 10px;
+            border-left: 4px solid #8b5cf6;
+        }
+        .sources h3 {
+            color: #8b5cf6;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sources h3::before {
+            content: "📡";
+        }
+        .sources p {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .sources a {
+            color: #4cc9f0;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .sources a:hover {
+            text-decoration: underline;
+        }
+        .sources ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .sources li {
+            margin-bottom: 5px;
+        }
+        .timestamp {
+            text-align: center;
+            color: #777;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        @media (max-width: 768px) {
             .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 30px;
-                padding-bottom: 20px;
-                border-bottom: 2px solid #4cc9f0;
-            }
-            .header-left {
-                flex: 1;
-            }
-            h1 {
-                color: #4cc9f0;
-                font-size: 2.5em;
-                margin-bottom: 10px;
-                text-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
-            }
-            .subtitle {
-                color: #aaa;
-                font-size: 1.1em;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
             }
             .clock {
-                text-align: right;
-                background: rgba(40, 40, 70, 0.8);
-                padding: 15px 25px;
-                border-radius: 10px;
-                border: 2px solid #4cc9f0;
-                min-width: 250px;
-            }
-            .clock-time {
-                font-size: 2.2em;
-                font-weight: bold;
-                color: #4cc9f0;
-                margin-bottom: 5px;
-            }
-            .clock-date {
-                font-size: 1em;
-                color: #aaa;
-                margin-bottom: 10px;
-            }
-            .clock-utc {
-                font-size: 1.2em;
-                color: #fbbf24;
-                font-weight: bold;
-            }
-            .status {
-                display: flex;
-                justify-content: space-between;
-                background: rgba(40, 40, 70, 0.8);
-                padding: 15px;
-                border-radius: 10px;
-                margin-bottom: 20px;
-                border-left: 4px solid #4cc9f0;
-            }
-            .status-item {
+                width: 100%;
                 text-align: center;
-                flex: 1;
-            }
-            .status-label {
-                font-size: 0.9em;
-                color: #aaa;
-                margin-bottom: 5px;
-            }
-            .status-value {
-                font-size: 1.8em;
-                font-weight: bold;
-            }
-            .sfi-good {
-                color: #4ade80;
-            }
-            .sfi-medium {
-                color: #fbbf24;
-            }
-            .sfi-bad {
-                color: #f87171;
-            }
-            .kindex-good {
-                color: #4ade80;
-            }
-            .kindex-medium {
-                color: #fbbf24;
-            }
-            .kindex-bad {
-                color: #f87171;
             }
             .bands {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 15px;
-                margin-top: 30px;
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
-            .band {
-                background: rgba(50, 50, 80, 0.8);
-                padding: 20px;
-                border-radius: 10px;
-                text-align: center;
-                transition: all 0.3s ease;
-                border: 2px solid transparent;
+            h1 {
+                font-size: 2em;
             }
-            .band:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            }
-            .band-label {
-                font-size: 1.3em;
-                font-weight: bold;
-                margin-bottom: 10px;
-            }
-            .band-status {
-                font-size: 1.1em;
-                font-weight: bold;
-                padding: 5px 10px;
-                border-radius: 5px;
-            }
-            .band-good {
-                background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-                color: #fff;
-                border-color: #22c55e;
-            }
-            .band-medium {
-                background: linear-gradient(135deg, #ca8a04 0%, #b45309 100%);
-                color: #fff;
-                border-color: #f59e0b;
-            }
-            .band-bad {
-                background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
-                color: #fff;
-                border-color: #ef4444;
-            }
-            .refresh-btn {
-                display: block;
-                width: 100%;
-                padding: 15px;
-                margin-top: 20px;
-                background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
-                color: white;
-                border: none;
-                border-radius: 10px;
-                font-size: 1.2em;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-            .refresh-btn:hover {
-                background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-                transform: scale(1.02);
-            }
-            .info {
-                margin-top: 25px;
-                padding: 15px;
-                background: rgba(70, 70, 100, 0.3);
-                border-radius: 10px;
-                font-size: 0.9em;
-                line-height: 1.6;
-            }
-            .info h3 {
-                color: #4cc9f0;
-                margin-bottom: 10px;
-            }
-            .info ul {
-                margin-left: 20px;
-            }
-            .info li {
-                margin-bottom: 5px;
-            }
-            .sources {
-                margin-top: 25px;
-                padding: 15px;
-                background: rgba(80, 40, 120, 0.3);
-                border-radius: 10px;
-                border-left: 4px solid #8b5cf6;
-            }
-            .sources h3 {
-                color: #8b5cf6;
-                margin-bottom: 10px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            .sources h3::before {
-                content: "📡";
-            }
-            .sources p {
-                margin-bottom: 8px;
-                line-height: 1.5;
-            }
-            .sources a {
-                color: #4cc9f0;
-                text-decoration: none;
-                font-weight: bold;
-            }
-            .sources a:hover {
-                text-decoration: underline;
-            }
-            .sources ul {
-                margin-left: 20px;
-                margin-top: 10px;
-            }
-            .sources li {
-                margin-bottom: 5px;
-            }
-            .timestamp {
-                text-align: center;
-                color: #777;
-                margin-top: 20px;
-                font-size: 0.9em;
-            }
-            @media (max-width: 768px) {
-                .header {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 20px;
-                }
-                .clock {
-                    width: 100%;
-                    text-align: center;
-                }
-                .bands {
-                    grid-template-columns: repeat(
-                        auto-fill,
-                        minmax(120px, 1fr)
-                    );
-                }
-                h1 {
-                    font-size: 2em;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <!-- Header z zegarem -->
-            <div class="header">
-                <div class="header-left">
-                    <h1>📡 Propagacja dla Polski</h1>
-                    <div class="subtitle">Czy dziś fale się niosą?</div>
-                </div>
-                <div class="clock">
-                    <div class="clock-time" id="polish-time">--:--:--</div>
-                    <div class="clock-date" id="polish-date">--.--.----</div>
-                    <div
-                        style="margin-top: 10px; font-size: 0.85em; color: #777"
-                    >
-                        Czas Polski
-                    </div>
-                    <div
-                        style="
-                            margin-top: 10px;
-                            padding-top: 10px;
-                            border-top: 1px solid #444;
-                        "
-                    >
-                        <div class="clock-utc" id="utc-time">--:--:-- UTC</div>
-                        <div
-                            style="
-                                font-size: 0.85em;
-                                color: #777;
-                                margin-top: 5px;
-                            "
-                        >
-                            UTC
-                        </div>
-                    </div>
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header z zegarem -->
+        <div class="header">
+            <div class="header-left">
+                <h1>📡 Propagacja dla Polski</h1>
+                <div class="subtitle">Czy dziś fale się niosą?</div>
+            </div>
+            <div class="clock">
+                <div class="clock-time" id="polish-time">--:--:--</div>
+                <div class="clock-date" id="polish-date">--.--.----</div>
+                <div style="margin-top: 10px; font-size: 0.85em; color: #777;">Czas Polski</div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;">
+                    <div class="clock-utc" id="utc-time">--:--:-- UTC</div>
+                    <div style="font-size: 0.85em; color: #777; margin-top: 5px;">UTC</div>
                 </div>
             </div>
-
-            <!-- Status - SFI, K-index, A-index -->
-            <div class="status">
-                <div class="status-item">
-                    <div class="status-label">SFI</div>
-                    <div class="status-value sfi-good" id="sfi">?</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">K-index</div>
-                    <div class="status-value kindex-good" id="kindex">?</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">A-index</div>
-                    <div class="status-value" id="aindex">?</div>
-                </div>
-            </div>
-
-            <!-- Pasma -->
-            <div class="bands" id="bands">
-                <div class="band">
-                    <div class="band-label">160m</div>
-                    <div class="band-status band-medium" id="band-160m">
-                        ŚREDNIO
-                    </div>
-                </div>
-                <div class="band">
-                    <div class="band-label">80m</div>
-                    <div class="band-status band-good" id="band-80m">
-                        DOBRZE
-                    </div>
-                </div>
-                <div class="band">
-                    <div class="band-label">40m</div>
-                    <div class="band-status band-good" id="band-40m">
-                        DOBRZE
-                    </div>
-                </div>
-                <div class="band">
-                    <div class="band-label">30m</div>
-                    <div class="band-status band-good" id="band-30m">
-                        DOBRZE
-                    </div>
-                </div>
-                <div class="band">
-                    <div class="band-label">20m</div>
-                    <div class="band-status band-good" id="band-20m">
-                        DOBRZE
-                    </div>
-                </div>
-                <div class="band">
-                    <div class="band-label">17m</div>
-                    <div class="band-status band-medium" id="band-17m">
-                        ŚREDNIO
-                    </div>
-                </div>
-                <div class="band">
-                    <div class="band-label">15m</div>
-                    <div class="band-status band-medium" id="band-15m">
-                        ŚREDNIO
-                    </div>
-                </div>
-                <div class="band">
-                    <div class="band-label">12m</div>
-                    <div class="band-status band-bad" id="band-12m">ŹLE</div>
-                </div>
-                <div class="band">
-                    <div class="band-label">10m</div>
-                    <div class="band-status band-bad" id="band-10m">ŹLE</div>
-                </div>
-            </div>
-
-            <button class="refresh-btn" onclick="refreshData()">
-                🔄 Odśwież dane
-            </button>
-
-            <div class="info">
-                <h3>📊 Jak to interpretować?</h3>
-                <ul>
-                    <li>
-                        <span style="color: #4ade80">🟢 DOBRZE</span> – Pasmo
-                        otwarte, gra na DX
-                    </li>
-                    <li>
-                        <span style="color: #fbbf24">🟡 ŚREDNIO</span> –
-                        Lokalnie działa, DX trudniejszy
-                    </li>
-                    <li>
-                        <span style="color: #f87171">🔴 ŹLE</span> – Pasmo
-                        zamknięte, lepiej poczekać
-                    </li>
-                </ul>
-                <p style="margin-top: 10px">
-                    <strong>Porady:</strong><br />
-                    • <strong>Poranek/Wieczór:</strong> 40m, 80m grają
-                    najlepiej<br />
-                    • <strong>Południe:</strong> 20m, 15m otwarte na DX<br />
-                    • <strong>K-index &gt; 4:</strong> wszystkie pasma słabe
-                </p>
-            </div>
-
-            <div class="sources">
-                <h3>Źródła danych</h3>
-                <p>
-                    <strong>SFI (Solar Flux Index)</strong> – mierzony
-                    codziennie w obserwatorium w
-                    <strong>Penticton, Kanada</strong> o godzinie 17:00 UTC.
-                    Dane pochodzą z:
-                </p>
-                <ul>
-                    <li>
-                        <a href="https://www.spaceweather.gc.ca" target="_blank"
-                            >Natural Resources Canada (NRCan)</a
-                        >
-                    </li>
-                    <li>
-                        <a href="https://www.swpc.noaa.gov" target="_blank"
-                            >NOAA Space Weather Prediction Center</a
-                        >
-                    </li>
-                </ul>
-
-                <p>
-                    <strong>K-index i A-index</strong> – mierzą aktywność
-                    geomagnetyczną Ziemi. Dane z:
-                </p>
-                <ul>
-                    <li>
-                        <a href="https://www.swpc.noaa.gov" target="_blank"
-                            >NOAA SWPC (Boulder, USA)</a
-                        >
-                    </li>
-                    <li>
-                        <a
-                            href="https://www.gfz-potsdam.de/en/kp-index"
-                            target="_blank"
-                            >GFZ Potsdam (Niemcy)</a
-                        >
-                    </li>
-                </ul>
-
-                <p>
-                    <strong>Propagacja pasm HF</strong> – obliczana na
-                    podstawie:
-                </p>
-                <ul>
-                    <li>
-                        <a href="https://prop.kc2g.com" target="_blank"
-                            >prop.kc2g.com</a
-                        >
-                        – dane w czasie rzeczywistym
-                    </li>
-                    <li>
-                        <a href="https://www.voacap.com" target="_blank"
-                            >VOACAP</a
-                        >
-                        – model propagacyjny
-                    </li>
-                    <li>
-                        <a href="https://www.dxmaps.com" target="_blank"
-                            >DX Maps</a
-                        >
-                        – raporty stacji
-                    </li>
-                </ul>
-
-                <p style="margin-top: 15px; font-size: 0.85em; color: #aaa">
-                    <strong>Uwaga:</strong> Ta strona używa
-                    <strong>mock danych</strong> (symulowanych) do celów
-                    demonstracyjnych. W prawdziwej wersji dane byłyby pobierane
-                    z API NOAA i innych źródeł w czasie rzeczywistym.
-                </p>
-            </div>
-
-            <div class="timestamp" id="timestamp"></div>
         </div>
 
-        <script>
-            // Zegar - aktualizacja co sekundę
-            function updateClock() {
-                const now = new Date();
+        <!-- Status - SFI, K-index, A-index -->
+        <div class="status">
+            <div class="status-item">
+                <div class="status-label">SFI</div>
+                <div class="status-value sfi-good" id="sfi">?</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">K-index</div>
+                <div class="status-value kindex-good" id="kindex">?</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">A-index</div>
+                <div class="status-value" id="aindex">?</div>
+            </div>
+        </div>
 
-                // Czas polski (automatycznie uwzględnia DST)
-                const polishTime = now.toLocaleTimeString("pl-PL", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    timeZone: "Europe/Warsaw",
-                });
-                const polishDate = now.toLocaleDateString("pl-PL", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    timeZone: "Europe/Warsaw",
-                });
+        <!-- Pasma -->
+        <div class="bands" id="bands">
+            <div class="band">
+                <div class="band-label">160m</div>
+                <div class="band-status band-medium" id="band-160m">ŚREDNIO</div>
+            </div>
+            <div class="band">
+                <div class="band-label">80m</div>
+                <div class="band-status band-good" id="band-80m">DOBRZE</div>
+            </div>
+            <div class="band">
+                <div class="band-label">40m</div>
+                <div class="band-status band-good" id="band-40m">DOBRZE</div>
+            </div>
+            <div class="band">
+                <div class="band-label">30m</div>
+                <div class="band-status band-good" id="band-30m">DOBRZE</div>
+            </div>
+            <div class="band">
+                <div class="band-label">20m</div>
+                <div class="band-status band-good" id="band-20m">DOBRZE</div>
+            </div>
+            <div class="band">
+                <div class="band-label">17m</div>
+                <div class="band-status band-medium" id="band-17m">ŚREDNIO</div>
+            </div>
+            <div class="band">
+                <div class="band-label">15m</div>
+                <div class="band-status band-medium" id="band-15m">ŚREDNIO</div>
+            </div>
+            <div class="band">
+                <div class="band-label">12m</div>
+                <div class="band-status band-bad" id="band-12m">ŹLE</div>
+            </div>
+            <div class="band">
+                <div class="band-label">10m</div>
+                <div class="band-status band-bad" id="band-10m">ŹLE</div>
+            </div>
+        </div>
 
-                // Czas UTC
-                const utcTime = now.toISOString().substring(11, 19) + " UTC";
+        <button class="refresh-btn" onclick="refreshData()">🔄 Odśwież dane</button>
 
-                // Aktualizuj elementy
-                document.getElementById("polish-time").textContent = polishTime;
-                document.getElementById("polish-date").textContent = polishDate;
-                document.getElementById("utc-time").textContent = utcTime;
+        <div class="info">
+            <h3>📊 Jak to interpretować?</h3>
+            <ul>
+                <li><span style="color: #4ade80;">🟢 DOBRZE</span> – Pasmo otwarte, gra na DX</li>
+                <li><span style="color: #fbbf24;">🟡 ŚREDNIO</span> – Lokalnie działa, DX trudniejszy</li>
+                <li><span style="color: #f87171;">🔴 ŹLE</span> – Pasmo zamknięte, lepiej poczekać</li>
+            </ul>
+            <p style="margin-top: 10px;">
+                <strong>Porady:</strong><br>
+                • <strong>Poranek/Wieczór:</strong> 40m, 80m grają najlepiej<br>
+                • <strong>Południe:</strong> 20m, 15m otwarte na DX<br>
+                • <strong>K-index &gt; 4:</strong> wszystkie pasma słabe
+            </p>
+        </div>
+
+        <div class="sources">
+            <h3>Źródła danych</h3>
+            <p><strong>SFI (Solar Flux Index)</strong> – mierzony codziennie w obserwatorium w <strong>Penticton, Kanada</strong> o godzinie 17:00 UTC. Dane pochodzą z:</p>
+            <ul>
+                <li><a href="https://www.spaceweather.gc.ca" target="_blank">Natural Resources Canada (NRCan)</a></li>
+                <li><a href="https://www.swpc.noaa.gov" target="_blank">NOAA Space Weather Prediction Center</a></li>
+            </ul>
+            
+            <p><strong>K-index i A-index</strong> – mierzą aktywność geomagnetyczną Ziemi. Dane z:</p>
+            <ul>
+                <li><a href="https://www.swpc.noaa.gov" target="_blank">NOAA SWPC (Boulder, USA)</a></li>
+                <li><a href="https://www.gfz-potsdam.de/en/kp-index" target="_blank">GFZ Potsdam (Niemcy)</a></li>
+            </ul>
+            
+            <p><strong>Propagacja pasm HF</strong> – obliczana na podstawie:</p>
+            <ul>
+                <li><a href="https://prop.kc2g.com" target="_blank">prop.kc2g.com</a> – dane w czasie rzeczywistym</li>
+                <li><a href="https://www.voacap.com" target="_blank">VOACAP</a> – model propagacyjny</li>
+                <li><a href="https://www.dxmaps.com" target="_blank">DX Maps</a> – raporty stacji</li>
+            </ul>
+            
+            <div class="data-source" id="data-source-info">
+                <!-- Tu pojawi się info o źródle danych -->
+            </div>
+        </div>
+
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        // Zegar - aktualizacja co sekundę
+        function updateClock() {
+            const now = new Date();
+            
+            // Czas polski (automatycznie uwzględnia DST)
+            const polishTime = now.toLocaleTimeString('pl-PL', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Europe/Warsaw'
+            });
+            const polishDate = now.toLocaleDateString('pl-PL', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                timeZone: 'Europe/Warsaw'
+            });
+            
+            // Czas UTC
+            const utcTime = now.toISOString().substring(11, 19) + ' UTC';
+            
+            // Aktualizuj elementy
+            document.getElementById('polish-time').textContent = polishTime;
+            document.getElementById('polish-date').textContent = polishDate;
+            document.getElementById('utc-time').textContent = utcTime;
+        }
+
+        // Uruchom zegar
+        setInterval(updateClock, 1000);
+        updateClock(); // Natychmiastowe uruchomienie
+
+        // Funkcja do pobierania prawdziwych danych z NOAA (przez proxy CORS)
+        async function fetchRealData() {
+            try {
+                // Pobierz dane SFI i K-index z NOAA przez proxy CORS
+                const sfiResponse = await fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json');
+                const kindexResponse = await fetch('https://services.swpc.noaa.gov/products/planetary-k-index-forecast.json');
+                
+                // Przetwórz dane SFI
+                const sfiData = await sfiResponse.json();
+                const latestSFI = parseFloat(sfiData[sfiData.length - 1][4]); // 5ta kolumna to SFI
+                
+                // Przetwórz dane K-index
+                const kindexData = await kindexResponse.json();
+                const latestKIndex = parseFloat(kindexData[kindexData.length - 1].kp); // Ostatni K-index
+                
+                // Oblicz A-index na podstawie K-index (uproszczone)
+                const aIndex = Math.round(Math.pow(10, latestKIndex / 3));
+                
+                return {
+                    sfi: Math.round(latestSFI),
+                    kindex: Math.round(latestKIndex),
+                    aindex: aIndex,
+                    timestamp: new Date().toLocaleString('pl-PL'),
+                    source: 'live'
+                };
+                
+            } catch (error) {
+                console.error('Błąd pobierania danych z NOAA:', error);
+                return null; // Zwróć null jeśli nie udało się pobrać
             }
+        }
 
-            // Uruchom zegar
-            setInterval(updateClock, 1000);
-            updateClock(); // Natychmiastowe uruchomienie
+        // Mock dane jako fallback
+        function getMockData() {
+            return {
+                sfi: 145,
+                kindex: 2,
+                aindex: 8,
+                timestamp: new Date().toLocaleString('pl-PL'),
+                source: 'mock'
+            };
+        }
 
-            // Funkcja do pobierania danych z API
-            async function fetchPropagationData() {
-                try {
-                    // Mock danych (do testowania offline)
-                    const mockData = {
-                        sfi: 145,
-                        kindex: 2,
-                        aindex: 8,
-                        timestamp: new Date().toLocaleString("pl-PL"),
-                    };
-
-                    return mockData;
-                } catch (error) {
-                    console.error("Błąd pobierania danych:", error);
-                    // Fallback na mock dane
-                    return {
-                        sfi: 145,
-                        kindex: 2,
-                        aindex: 8,
-                        timestamp: new Date().toLocaleString("pl-PL"),
-                    };
-                }
-            }
-
-            // Funkcja oceny pasma na podstawie K-index i SFI
-            function evaluateBand(band, kindex, sfi) {
-                if (kindex <= 2 && sfi > 120) {
-                    if (
-                        band === "10m" ||
-                        band === "12m" ||
-                        band === "15m" ||
-                        band === "17m" ||
-                        band === "20m"
-                    ) {
-                        return { status: "DOBRZE", color: "good" };
-                    } else {
-                        return { status: "DOBRZE", color: "good" };
-                    }
-                } else if (kindex <= 3 && sfi > 100) {
-                    if (band === "10m" || band === "12m") {
-                        return { status: "ŚREDNIO", color: "medium" };
-                    } else if (band === "15m" || band === "17m") {
-                        return { status: "DOBRZE", color: "good" };
-                    } else {
-                        return { status: "DOBRZE", color: "good" };
-                    }
-                } else if (kindex <= 4) {
-                    if (band === "10m" || band === "12m" || band === "15m") {
-                        return { status: "ŹLE", color: "bad" };
-                    } else if (band === "17m" || band === "20m") {
-                        return { status: "ŚREDNIO", color: "medium" };
-                    } else {
-                        return { status: "DOBRZE", color: "good" };
-                    }
+        // Funkcja oceny pasma na podstawie K-index i SFI
+        function evaluateBand(band, kindex, sfi) {
+            if (kindex <= 2 && sfi > 120) {
+                if (band === '10m' || band === '12m' || band === '15m' || band === '17m' || band === '20m') {
+                    return { status: 'DOBRZE', color: 'good' };
                 } else {
-                    if (
-                        band === "10m" ||
-                        band === "12m" ||
-                        band === "15m" ||
-                        band === "17m" ||
-                        band === "20m"
-                    ) {
-                        return { status: "ŹLE", color: "bad" };
-                    } else if (band === "30m" || band === "40m") {
-                        return { status: "ŚREDNIO", color: "medium" };
-                    } else {
-                        return { status: "DOBRZE", color: "good" };
-                    }
+                    return { status: 'DOBRZE', color: 'good' };
+                }
+            } else if (kindex <= 3 && sfi > 100) {
+                if (band === '10m' || band === '12m') {
+                    return { status: 'ŚREDNIO', color: 'medium' };
+                } else if (band === '15m' || band === '17m') {
+                    return { status: 'DOBRZE', color: 'good' };
+                } else {
+                    return { status: 'DOBRZE', color: 'good' };
+                }
+            } else if (kindex <= 4) {
+                if (band === '10m' || band === '12m' || band === '15m') {
+                    return { status: 'ŹLE', color: 'bad' };
+                } else if (band === '17m' || band === '20m') {
+                    return { status: 'ŚREDNIO', color: 'medium' };
+                } else {
+                    return { status: 'DOBRZE', color: 'good' };
+                }
+            } else {
+                if (band === '10m' || band === '12m' || band === '15m' || band === '17m' || band === '20m') {
+                    return { status: 'ŹLE', color: 'bad' };
+                } else if (band === '30m' || band === '40m') {
+                    return { status: 'ŚREDNIO', color: 'medium' };
+                } else {
+                    return { status: 'DOBRZE', color: 'good' };
                 }
             }
+        }
 
-            // Funkcja odświeżania danych
-            async function refreshData() {
-                const refreshBtn = document.querySelector(".refresh-btn");
-                refreshBtn.textContent = "🔄 Ładowanie...";
-                refreshBtn.disabled = true;
+        // Funkcja odświeżania danych
+        async function refreshData() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.textContent = '🔄 Ładowanie...';
+            refreshBtn.disabled = true;
 
-                try {
-                    // Pobierz dane
-                    const data = await fetchPropagationData();
-
-                    // Aktualizuj wyświetlane dane
-                    document.getElementById("sfi").textContent = data.sfi;
-                    document.getElementById("kindex").textContent = data.kindex;
-                    document.getElementById("aindex").textContent = data.aindex;
-                    document.getElementById("timestamp").textContent =
-                        `Ostatnia aktualizacja: ${data.timestamp}`;
-
-                    // Ustaw kolory dla SFI i K-index
-                    const sfiEl = document.getElementById("sfi");
-                    const kindexEl = document.getElementById("kindex");
-
-                    // SFI colors
-                    if (data.sfi > 150) {
-                        sfiEl.className = "status-value sfi-good";
-                    } else if (data.sfi > 100) {
-                        sfiEl.className = "status-value sfi-medium";
-                    } else {
-                        sfiEl.className = "status-value sfi-bad";
-                    }
-
-                    // K-index colors
-                    if (data.kindex <= 2) {
-                        kindexEl.className = "status-value kindex-good";
-                    } else if (data.kindex <= 4) {
-                        kindexEl.className = "status-value kindex-medium";
-                    } else {
-                        kindexEl.className = "status-value kindex-bad";
-                    }
-
-                    // Ocena pasm
-                    const bands = [
-                        "160m",
-                        "80m",
-                        "40m",
-                        "30m",
-                        "20m",
-                        "17m",
-                        "15m",
-                        "12m",
-                        "10m",
-                    ];
-
-                    bands.forEach((band) => {
-                        const result = evaluateBand(
-                            band,
-                            data.kindex,
-                            data.sfi,
-                        );
-                        const el = document.getElementById(`band-${band}`);
-                        el.textContent = result.status;
-                        el.className = `band-status band-${result.color}`;
-                    });
-                } catch (error) {
-                    console.error("Błąd:", error);
-                    alert(
-                        "Nie udało się pobrać danych. Sprawdź połączenie internetowe.",
-                    );
-                } finally {
-                    refreshBtn.textContent = "🔄 Odśwież dane";
-                    refreshBtn.disabled = false;
+            try {
+                // Najpierw spróbuj pobrać prawdziwe dane
+                let data = await fetchRealData();
+                
+                // Jeśli nie udało się, użyj mock danych
+                if (!data) {
+                    data = getMockData();
+                    document.getElementById('data-source-info').innerHTML = `
+                        <strong>⚠️ Używam danych symulowanych</strong><br>
+                        Nie udało się pobrać danych z NOAA. Strona używa danych testowych.
+                    `;
+                    document.getElementById('data-source-info').className = 'data-source mock';
+                } else {
+                    document.getElementById('data-source-info').innerHTML = `
+                        <strong>✅ Dane w czasie rzeczywistym</strong><br>
+                        Dane pobrane z NOAA Space Weather Prediction Center.
+                    `;
+                    document.getElementById('data-source-info').className = 'data-source live';
                 }
+                
+                // Aktualizuj wyświetlane dane
+                document.getElementById('sfi').textContent = data.sfi;
+                document.getElementById('kindex').textContent = data.kindex;
+                document.getElementById('aindex').textContent = data.aindex;
+                document.getElementById('timestamp').textContent = `Ostatnia aktualizacja: ${data.timestamp}`;
+                
+                // Ustaw kolory dla SFI i K-index
+                const sfiEl = document.getElementById('sfi');
+                const kindexEl = document.getElementById('kindex');
+                
+                // SFI colors
+                if (data.sfi > 150) {
+                    sfiEl.className = 'status-value sfi-good';
+                } else if (data.sfi > 100) {
+                    sfiEl.className = 'status-value sfi-medium';
+                } else {
+                    sfiEl.className = 'status-value sfi-bad';
+                }
+                
+                // K-index colors
+                if (data.kindex <= 2) {
+                    kindexEl.className = 'status-value kindex-good';
+                } else if (data.kindex <= 4) {
+                    kindexEl.className = 'status-value kindex-medium';
+                } else {
+                    kindexEl.className = 'status-value kindex-bad';
+                }
+                
+                // Ocena pasm
+                const bands = ['160m', '80m', '40m', '30m', '20m', '17m', '15m', '12m', '10m'];
+                
+                bands.forEach(band => {
+                    const result = evaluateBand(band, data.kindex, data.sfi);
+                    const el = document.getElementById(`band-${band}`);
+                    el.textContent = result.status;
+                    el.className = `band-status band-${result.color}`;
+                });
+                
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Nie udało się pobrać danych. Sprawdź połączenie internetowe.');
+            } finally {
+                refreshBtn.textContent = '🔄 Odśwież dane';
+                refreshBtn.disabled = false;
             }
+        }
 
-            // Auto-refresh co 5 minut
-            setInterval(refreshData, 300000);
+        // Auto-refresh co 5 minut
+        setInterval(refreshData, 300000);
 
-            // Załaduj dane przy starcie
-            window.onload = refreshData;
-        </script>
-    </body>
+        // Załaduj dane przy starcie
+        window.onload = refreshData;
+    </script>
+</body>
 </html>
