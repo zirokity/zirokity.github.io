@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📡 Propagacja dla Polski</title>
+    <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -62,6 +63,20 @@
             color: #aaa;
             margin-bottom: 10px;
         }
+        .sun-times {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+            font-size: 0.9em;
+        }
+        .sun-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 3px 0;
+            color: #fbbf24;
+        }
+        .sun-icon { font-size: 1.2em; }
         .clock-utc {
             font-size: 1.2em;
             color: #fbbf24;
@@ -226,6 +241,46 @@
             margin-top: 20px;
             font-size: 0.9em;
         }
+        
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            background: rgba(30, 30, 50, 0.95);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            border-left: 4px solid #4cc9f0;
+            animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 4.5s;
+            min-width: 300px;
+        }
+        .toast.good {
+            border-left-color: #4ade80;
+            background: rgba(22, 163, 74, 0.9);
+        }
+        .toast.bad {
+            border-left-color: #f87171;
+            background: rgba(185, 28, 28, 0.9);
+        }
+        .toast.warning {
+            border-left-color: #fbbf24;
+            background: rgba(202, 138, 4, 0.9);
+        }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+        
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -242,10 +297,17 @@
             h1 {
                 font-size: 2em;
             }
+            .toast {
+                min-width: auto;
+                width: 90%;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Toast container dla alertów -->
+    <div class="toast-container" id="toast-container"></div>
+
     <div class="container">
         <!-- Header z zegarem -->
         <div class="header">
@@ -257,6 +319,23 @@
                 <div class="clock-time" id="polish-time">--:--:--</div>
                 <div class="clock-date" id="polish-date">--.--.----</div>
                 <div style="margin-top: 10px; font-size: 0.85em; color: #777;">Czas Polski</div>
+                
+                <!-- Wschód/zachód Słońca -->
+                <div class="sun-times">
+                    <div class="sun-item">
+                        <span class="sun-icon">🌅</span>
+                        <span>Wschód: <strong id="sunrise">--:--</strong></span>
+                    </div>
+                    <div class="sun-item">
+                        <span class="sun-icon">🌇</span>
+                        <span>Zachód: <strong id="sunset">--:--</strong></span>
+                    </div>
+                    <div class="sun-item">
+                        <span class="sun-icon">🌙</span>
+                        <span>Nocy: <strong id="night-status">?</strong></span>
+                    </div>
+                </div>
+                
                 <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;">
                     <div class="clock-utc" id="utc-time">--:--:-- UTC</div>
                     <div style="font-size: 0.85em; color: #777; margin-top: 5px;">UTC</div>
@@ -331,8 +410,10 @@
             </ul>
             <p style="margin-top: 10px;">
                 <strong>Porady:</strong><br>
-                • <strong>Poranek/Wieczór:</strong> 40m, 80m grają najlepiej<br>
-                • <strong>Południe:</strong> 20m, 15m otwarte na DX<br>
+                • <strong>🌅 Poranek:</strong> 40m, 80m grają lokalnie<br>
+                • <strong>🌇 Wieczór:</strong> 40m otwiera się na DX (Ameryka Płd./Azja)<br>
+                • <strong>🌙 Noc:</strong> 80m, 160m dla dalekich dystansów<br>
+                • <strong>☀️ Południe:</strong> 20m, 15m otwarte na światowe DX<br>
                 • <strong>K-index &gt; 4:</strong> wszystkie pasma słabe
             </p>
         </div>
@@ -341,7 +422,7 @@
             <h3>Źródła danych</h3>
             <p>Dane pochodzą z:</p>
             <ul>
-                <li><a href="https://www.hamqsl.com/solar.html" target="_blank">hamqsl.com</a> – specjalnie dla radioamatorów (przez proxy CORS)</li>
+                <li><a href="https://www.hamqsl.com/solar.html" target="_blank">hamqsl.com</a> – dane słoneczne (przez proxy CORS)</li>
                 <li><a href="https://prop.kc2g.com" target="_blank">prop.kc2g.com</a> – wizualizacja propagacji</li>
             </ul>
             
@@ -354,6 +435,11 @@
     </div>
 
     <script>
+        // Zmienne do śledzenia zmian propagacji
+        let prevKIndex = null;
+        let prevSFI = null;
+        let lastToastTime = 0;
+
         // Zegar - aktualizacja co sekundę
         function updateClock() {
             const now = new Date();
@@ -379,11 +465,115 @@
             document.getElementById('polish-time').textContent = polishTime;
             document.getElementById('polish-date').textContent = polishDate;
             document.getElementById('utc-time').textContent = utcTime;
+            
+            // Sprawdź czy jest dzień czy noc
+            updateSunStatus();
         }
 
-        // Uruchom zegar
-        setInterval(updateClock, 1000);
-        updateClock(); // Natychmiastowe uruchomienie
+        // Oblicz wschód/zachód Słońca dla Polski (Warszawa)
+        function calculateSunTimes() {
+            const now = new Date();
+            const lat = 52.2297;  // Warszawa
+            const lon = 21.0122;
+            
+            const times = SunCalc.getTimes(now, lat, lon);
+            
+            // Formatuj czas
+            const formatTime = (date) => {
+                return date.toLocaleTimeString('pl-PL', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            };
+            
+            document.getElementById('sunrise').textContent = formatTime(times.sunrise);
+            document.getElementById('sunset').textContent = formatTime(times.sunset);
+        }
+
+        // Sprawdź czy jest dzień czy noc
+        function updateSunStatus() {
+            const now = new Date();
+            const lat = 52.2297;
+            const lon = 21.0122;
+            
+            const times = SunCalc.getTimes(now, lat, lon);
+            
+            const isDay = now > times.sunrise && now < times.sunset;
+            const isNight = now < times.sunrise || now > times.sunset;
+            
+            const nightStatusEl = document.getElementById('night-status');
+            
+            if (isDay) {
+                nightStatusEl.textContent = "Dzień ☀️";
+                nightStatusEl.style.color = "#fbbf24";
+            } else if (isNight) {
+                nightStatusEl.textContent = "Noc 🌙";
+                nightStatusEl.style.color = "#4cc9f0";
+            } else {
+                nightStatusEl.textContent = "Świtanie/Zmierzch";
+                nightStatusEl.style.color = "#fbbf24";
+            }
+        }
+
+        // Pokaż toast notification
+        function showToast(message, type = 'info') {
+            const now = Date.now();
+            // Limit: max 1 toast na 10 sekund (żeby nie spamować)
+            if (now - lastToastTime < 10000) {
+                return;
+            }
+            lastToastTime = now;
+            
+            const toastContainer = document.getElementById('toast-container');
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <strong>${type === 'good' ? '🎉' : type === 'bad' ? '⚠️' : 'ℹ️'}</strong> ${message}
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Usuń toast po 5 sekundach
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.5s ease-in';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 5000);
+        }
+
+        // Sprawdź zmiany propagacji
+        function checkPropagationChanges(currentKIndex, currentSFI) {
+            // Sprawdź K-index
+            if (prevKIndex !== null && currentKIndex !== prevKIndex) {
+                if (currentKIndex <= 2 && prevKIndex > 2) {
+                    showToast('K-index spadł do ' + currentKIndex + '! Propagacja się poprawiła! 🎉', 'good');
+                } else if (currentKIndex >= 5 && prevKIndex < 5) {
+                    showToast('K-index wzrósł do ' + currentKIndex + '! Propagacja się pogorszyła! ⚠️', 'bad');
+                } else if (currentKIndex > prevKIndex) {
+                    showToast('K-index wzrósł z ' + prevKIndex + ' do ' + currentKIndex, 'warning');
+                } else if (currentKIndex < prevKIndex) {
+                    showToast('K-index spadł z ' + prevKIndex + ' do ' + currentKIndex, 'good');
+                }
+            }
+            
+            // Sprawdź SFI
+            if (prevSFI !== null && currentSFI !== prevSFI) {
+                const diff = currentSFI - prevSFI;
+                if (Math.abs(diff) >= 10) { // Znacząca zmiana
+                    if (diff > 0) {
+                        showToast('SFI wzrósł o ' + diff + '!', 'good');
+                    } else {
+                        showToast('SFI spadł o ' + Math.abs(diff) + '!', 'warning');
+                    }
+                }
+            }
+            
+            // Zapisz bieżące wartości
+            prevKIndex = currentKIndex;
+            prevSFI = currentSFI;
+        }
 
         // Funkcja do pobierania danych przez proxy CORS
         async function fetchRealData() {
@@ -518,6 +708,9 @@
                     document.getElementById('data-source-info').className = 'data-source live';
                 }
                 
+                // Sprawdź zmiany propagacji
+                checkPropagationChanges(data.kindex, data.sfi);
+                
                 // Aktualizuj wyświetlane dane
                 document.getElementById('sfi').textContent = data.sfi;
                 document.getElementById('kindex').textContent = data.kindex;
@@ -568,8 +761,16 @@
         // Auto-refresh co 5 minut
         setInterval(refreshData, 300000);
 
+        // Oblicz wschód/zachód przy starcie i odświeżaj co godzinę
+        calculateSunTimes();
+        setInterval(calculateSunTimes, 3600000);
+
         // Załaduj dane przy starcie
-        window.onload = refreshData;
+        window.onload = function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            refreshData();
+        };
     </script>
 </body>
 </html>
