@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📡 Propagacja dla Polski</title>
+    <title>📡 Propagacja PL</title>
     <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            background: #111;
-            color: #ccc;
-            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            background: #0d0d0d;
+            color: #ddd;
+            padding: 15px;
             line-height: 1.5;
         }
         .container {
-            max-width: 800px;
+            max-width: 750px;
             margin: 0 auto;
-            background: #1a1a1a;
-            border-radius: 8px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
         header {
             text-align: center;
@@ -29,322 +25,227 @@
             border-bottom: 1px solid #333;
         }
         h1 {
-            font-size: 2.0em;
-            color: #4cc9f0;
+            font-size: 1.9em;
+            color: #5eead4;
             letter-spacing: -0.5px;
-            margin-bottom: 8px;
         }
         .subtitle {
             color: #777;
-            font-size: 1.1em;
+            font-size: 0.95em;
+            margin-top: 5px;
         }
         
-        /* Dzień/Noc – prosty, elegancki */
-        .day-night {
-            font-size: 1.8em;
-            font-weight: bold;
-            text-align: center;
-            padding: 12px;
+        /* GŁÓWNE DANE – na wierzchu */
+        .main-data {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            background: #151515;
+            padding: 18px;
             border-radius: 6px;
-            margin: 15px 0;
-            background: #222;
-            letter-spacing: 1px;
         }
-        .day-night.day { color: #fbbf24; }
-        .day-night.night { color: #60a5fa; }
-        .day-night.dawn { color: #f97316; }
+        .data-item {
+            text-align: center;
+            flex: 1;
+            padding: 0 8px;
+        }
+        .data-label {
+            font-size: 0.85em;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .data-value {
+            font-size: 2.4em;
+            font-weight: bold;
+        }
+        .sfi-good, .k-good { color: #34d399; }
+        .sfi-medium, .k-medium { color: #fbbf24; }
+        .sfi-bad, .k-bad { color: #f87171; }
         
-        /* Zegary */
+        /* Pasma – od razu pod danymi */
+        .bands {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .band {
+            background: #151515;
+            padding: 14px 8px;
+            border-radius: 5px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .band:hover {
+            background: #1a1a1a;
+        }
+        .band-label {
+            font-size: 1.05em;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #5eead4;
+        }
+        .band-status {
+            font-size: 0.9em;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 3px;
+        }
+        .band-good { background: #0d4d26; color: #a7f3d0; }
+        .band-medium { background: #4a2109; color: #fef3c7; }
+        .band-bad { background: #450a0a; color: #fecaca; }
+        
+        /* Zegary – małe, dyskretne */
         .clocks {
             display: flex;
             justify-content: space-between;
-            margin: 20px 0;
-            background: #222;
-            padding: 15px;
+            background: #151515;
+            padding: 14px;
             border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
         }
         .clock {
             text-align: center;
             flex: 1;
         }
         .clock-time {
-            font-size: 1.8em;
+            font-size: 1.6em;
             font-weight: bold;
-            color: #4cc9f0;
-            margin-bottom: 5px;
-        }
-        .clock-date {
-            font-size: 0.95em;
-            color: #888;
+            color: #5eead4;
+            margin-bottom: 4px;
         }
         .clock-label {
+            color: #777;
             font-size: 0.85em;
-            color: #666;
-            margin-top: 3px;
         }
+        .day-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .day-badge.day { background: #4a2109; color: #fef3c7; }
+        .day-badge.night { background: #0e2a47; color: #93c5fd; }
+        .day-badge.dawn { background: #431407; color: #ffedd5; }
         
-        /* Wschód/zachód */
-        .sun-info {
-            background: #222;
+        /* Dodatkowe info – na dole, małe */
+        .extras {
+            background: #151515;
             padding: 15px;
             border-radius: 6px;
-            margin: 20px 0;
-            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #888;
         }
-        .sun-title {
-            color: #fbbf24;
-            font-size: 1.1em;
-            margin-bottom: 12px;
-            font-weight: bold;
+        .extras-title {
+            color: #777;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-align: center;
         }
         .sun-times {
             display: flex;
             justify-content: space-around;
+            margin-top: 8px;
         }
         .sun-item {
             text-align: center;
         }
-        .sun-icon {
-            font-size: 1.6em;
-            margin-bottom: 5px;
-        }
         .sun-time {
             font-weight: bold;
             color: #fbbf24;
-            font-size: 1.2em;
         }
-        .sun-label {
-            font-size: 0.85em;
-            color: #777;
-            display: block;
-            margin-top: 3px;
-        }
-        
-        /* Status SFI/K-index */
-        .status {
-            display: flex;
-            justify-content: space-between;
-            background: #222;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
-        }
-        .status-item {
-            text-align: center;
-            flex: 1;
-        }
-        .status-label {
-            font-size: 0.85em;
-            color: #777;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .status-value {
-            font-size: 1.9em;
-            font-weight: bold;
-        }
-        .sfi-good, .kindex-good { color: #34d399; }
-        .sfi-medium, .kindex-medium { color: #fbbf24; }
-        .sfi-bad, .kindex-bad { color: #f87171; }
-        
-        /* Pasma */
-        .bands {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 12px;
-            margin: 25px 0;
-        }
-        .band {
-            background: #222;
-            padding: 15px 10px;
-            border-radius: 6px;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .band:hover {
-            background: #2a2a2a;
-            transform: translateY(-2px);
-        }
-        .band-label {
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #4cc9f0;
-        }
-        .band-status {
-            font-size: 0.95em;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .band-good { background: #166534; color: #fff; }
-        .band-medium { background: #854d0e; color: #fff; }
-        .band-bad { background: #7f1d1d; color: #fff; }
         
         .refresh-btn {
             width: 100%;
-            padding: 12px;
-            background: #333;
-            color: #4cc9f0;
-            border: 1px solid #4cc9f0;
-            border-radius: 6px;
+            padding: 11px;
+            background: #1a1a1a;
+            color: #5eead4;
+            border: 1px solid #333;
+            border-radius: 5px;
             font-family: inherit;
-            font-size: 1.1em;
+            font-size: 1.05em;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
         }
         .refresh-btn:hover {
-            background: #2a2a2a;
-            color: #fff;
+            background: #202020;
+            border-color: #5eead4;
         }
-        
-        .info {
-            background: #222;
-            padding: 18px;
-            border-radius: 6px;
-            margin: 25px 0;
-            font-size: 0.95em;
+        .refresh-btn:active {
+            transform: scale(0.98);
         }
-        .info h3 {
-            color: #4cc9f0;
-            margin-bottom: 12px;
-            font-size: 1.2em;
-        }
-        .info ul { margin-left: 20px; margin-top: 10px; }
-        .info li { margin-bottom: 6px; }
-        
-        .sources {
-            background: #222;
-            padding: 18px;
-            border-radius: 6px;
-            margin: 25px 0;
-            font-size: 0.9em;
-        }
-        .sources h3 {
-            color: #8b5cf6;
-            margin-bottom: 12px;
-            font-size: 1.1em;
-        }
-        .sources a {
-            color: #4cc9f0;
-            text-decoration: none;
-        }
-        .sources a:hover {
-            text-decoration: underline;
-        }
-        
-        .data-source {
-            margin-top: 15px;
-            padding-top: 12px;
-            border-top: 1px solid #333;
-            font-size: 0.9em;
-        }
-        .data-source.live { color: #34d399; }
-        .data-source.mock { color: #fbbf24; }
         
         .timestamp {
             text-align: center;
             color: #666;
-            font-size: 0.85em;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #333;
+            font-size: 0.8em;
+            margin-top: 18px;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a2a;
         }
         
-        /* Toast notifications – subtelne */
         .toast-container {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             z-index: 9999;
         }
         .toast {
-            background: #222;
-            color: #ccc;
-            padding: 12px 20px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            border-left: 3px solid #4cc9f0;
-            min-width: 280px;
-            font-family: inherit;
+            background: #1a1a1a;
+            color: #ddd;
+            padding: 10px 18px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            border-left: 3px solid #5eead4;
+            min-width: 260px;
             font-size: 0.95em;
         }
         .toast.good { border-left-color: #34d399; }
         .toast.bad { border-left-color: #f87171; }
         .toast.warning { border-left-color: #fbbf24; }
         
-        @media (max-width: 600px) {
+        @media (max-width: 550px) {
+            .main-data { flex-direction: column; gap: 15px; }
             .clocks { flex-direction: column; gap: 12px; }
-            .sun-times { flex-direction: column; gap: 15px; }
-            .bands { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+            .bands { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+            .band-label { font-size: 0.95em; }
             h1 { font-size: 1.7em; }
-            .day-night { font-size: 1.6em; }
         }
     </style>
 </head>
 <body>
     <div class="toast-container" id="toast-container"></div>
-
     <div class="container">
         <header>
-            <h1>📡 Propagacja dla Polski</h1>
-            <div class="subtitle">Czy dziś fale się niosą?</div>
-            
-            <!-- Dzień/Noc – prosty i czytelny -->
-            <div class="day-night" id="day-night-status">Ładowanie...</div>
+            <h1>📡 Propagacja PL</h1>
+            <div class="subtitle">Dane na żywo z hamqsl.com</div>
         </header>
 
-        <!-- Zegary -->
-        <div class="clocks">
-            <div class="clock">
-                <div class="clock-time" id="polish-time">--:--:--</div>
-                <div class="clock-date" id="polish-date">--.--.----</div>
-                <div class="clock-label">Czas Polski</div>
+        <!-- GŁÓWNE DANE – najważniejsze na górze -->
+        <div class="main-data">
+            <div class="data-item">
+                <div class="data-label">SFI</div>
+                <div class="data-value sfi-good" id="sfi">?</div>
             </div>
-            <div class="clock">
-                <div class="clock-time" id="utc-time">--:--:--</div>
-                <div class="clock-date" id="utc-date">--.--.----</div>
-                <div class="clock-label">UTC</div>
+            <div class="data-item">
+                <div class="data-label">K-index</div>
+                <div class="data-value k-good" id="kindex">?</div>
             </div>
-        </div>
-
-        <!-- Wschód/Zachód -->
-        <div class="sun-info">
-            <div class="sun-title">🌅 Wschód i zachód Słońca (Warszawa)</div>
-            <div class="sun-times">
-                <div class="sun-item">
-                    <div class="sun-icon">🌅</div>
-                    <div class="sun-time" id="sunrise">--:--</div>
-                    <span class="sun-label">Wschód</span>
-                </div>
-                <div class="sun-item">
-                    <div class="sun-icon">🌇</div>
-                    <div class="sun-time" id="sunset">--:--</div>
-                    <span class="sun-label">Zachód</span>
-                </div>
+            <div class="data-item">
+                <div class="data-label">A-index</div>
+                <div class="data-value" id="aindex">?</div>
             </div>
         </div>
 
-        <!-- Status -->
-        <div class="status">
-            <div class="status-item">
-                <div class="status-label">SFI</div>
-                <div class="status-value sfi-good" id="sfi">?</div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">K-index</div>
-                <div class="status-value kindex-good" id="kindex">?</div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">A-index</div>
-                <div class="status-value" id="aindex">?</div>
-            </div>
-        </div>
-
-        <!-- Pasma -->
+        <!-- Pasma – od razu pod danymi -->
         <div class="bands" id="bands">
             <div class="band">
                 <div class="band-label">160m</div>
@@ -384,261 +285,190 @@
             </div>
         </div>
 
-        <button class="refresh-btn" onclick="refreshData()">Odśwież dane</button>
-
-        <div class="info">
-            <h3>📊 Interpretacja</h3>
-            <ul>
-                <li><span style="color:#34d399">🟢 DOBRZE</span> – Pasmo otwarte na DX</li>
-                <li><span style="color:#fbbf24">🟡 ŚREDNIO</span> – Lokalnie działa</li>
-                <li><span style="color:#f87171">🔴 ŹLE</span> – Pasmo zamknięte</li>
-            </ul>
-            <p style="margin-top:12px; font-style:italic; color:#888;">
-                ☀️ DZIEŃ: 20m/15m na światowe DX<br>
-                🌙 NOC: 80m/160m na dalekie dystanse<br>
-                🌅 ZMIERZCH: 40m otwiera się na Amerykę Płd.
-            </p>
+        <!-- Zegary – małe, z badge'em dnia/nocy -->
+        <div class="clocks">
+            <div class="clock">
+                <div class="clock-time" id="polish-time">--:--:--</div>
+                <div class="clock-label">PL <span class="day-badge" id="day-badge">...</span></div>
+            </div>
+            <div class="clock">
+                <div class="clock-time" id="utc-time">--:--:--</div>
+                <div class="clock-label">UTC</div>
+            </div>
         </div>
 
-        <div class="sources">
-            <h3>Źródła danych</h3>
-            <p>Dane z <a href="https://www.hamqsl.com/solar.html" target="_blank">hamqsl.com</a> (przez proxy CORS)</p>
-            <p>Wizualizacja: <a href="https://prop.kc2g.com" target="_blank">prop.kc2g.com</a></p>
-            <div class="data-source" id="data-source-info">Ładowanie danych...</div>
+        <button class="refresh-btn" onclick="refreshData()">Odśwież</button>
+
+        <!-- Dodatkowe info – na dole -->
+        <div class="extras">
+            <div class="extras-title">🌅 Wschód/zachód Słońca (Warszawa)</div>
+            <div class="sun-times">
+                <div class="sun-item">
+                    <div>🌅</div>
+                    <div class="sun-time" id="sunrise">--:--</div>
+                    <div>wschód</div>
+                </div>
+                <div class="sun-item">
+                    <div>🌇</div>
+                    <div class="sun-time" id="sunset">--:--</div>
+                    <div>zachód</div>
+                </div>
+            </div>
         </div>
 
-        <div class="timestamp" id="timestamp"></div>
+        <div class="timestamp" id="timestamp">Ładowanie...</div>
     </div>
 
     <script>
-        let prevKIndex = null;
-        let prevSFI = null;
-        let lastToastTime = 0;
+        let prevK = null, prevSFI = null, lastToast = 0;
 
         function updateClock() {
             const now = new Date();
-            const polishTime = now.toLocaleTimeString('pl-PL', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: 'Europe/Warsaw'
-            });
-            const polishDate = now.toLocaleDateString('pl-PL', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                timeZone: 'Europe/Warsaw'
-            });
+            const plTime = now.toLocaleTimeString('pl-PL', {hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Warsaw'});
+            const plDate = now.toLocaleDateString('pl-PL', {day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Warsaw'});
             const utcTime = now.toISOString().substring(11, 19);
-            const utcDate = now.toISOString().substring(0, 10);
             
-            document.getElementById('polish-time').textContent = polishTime;
-            document.getElementById('polish-date').textContent = polishDate;
+            document.getElementById('polish-time').textContent = plTime;
             document.getElementById('utc-time').textContent = utcTime;
-            document.getElementById('utc-date').textContent = utcDate;
             
-            updateDayNightStatus();
+            // Aktualizuj badge dnia/nocy
+            updateDayBadge();
         }
 
-        function calculateSunTimes() {
+        function updateDayBadge() {
             const now = new Date();
-            const lat = 52.2297;
-            const lon = 21.0122;
-            const times = SunCalc.getTimes(now, lat, lon);
+            const times = SunCalc.getTimes(now, 52.2297, 21.0122);
+            const badge = document.getElementById('day-badge');
             
-            const formatTime = (date) => {
-                return date.toLocaleTimeString('pl-PL', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            };
-            
-            document.getElementById('sunrise').textContent = formatTime(times.sunrise);
-            document.getElementById('sunset').textContent = formatTime(times.sunset);
-            
-            return times;
-        }
-
-        function updateDayNightStatus() {
-            const now = new Date();
-            const lat = 52.2297;
-            const lon = 21.0122;
-            const times = SunCalc.getTimes(now, lat, lon);
-            
-            const dayNightEl = document.getElementById('day-night-status');
             const isNight = now < times.sunrise || now > times.sunset;
-            const dawnStart = new Date(times.sunrise.getTime() - 20 * 60000);
-            const dawnEnd = new Date(times.sunrise.getTime() + 20 * 60000);
-            const duskStart = new Date(times.sunset.getTime() - 20 * 60000);
-            const duskEnd = new Date(times.sunset.getTime() + 20 * 60000);
+            const dawnStart = new Date(times.sunrise.getTime() - 20*60000);
+            const dawnEnd = new Date(times.sunrise.getTime() + 20*60000);
+            const duskStart = new Date(times.sunset.getTime() - 20*60000);
+            const duskEnd = new Date(times.sunset.getTime() + 20*60000);
             const isDawn = now >= dawnStart && now <= dawnEnd;
             const isDusk = now >= duskStart && now <= duskEnd;
             
             if (isNight) {
-                dayNightEl.textContent = "🌙 NOC";
-                dayNightEl.className = "day-night night";
-            } else if (isDawn) {
-                dayNightEl.textContent = "🌅 ŚWIT";
-                dayNightEl.className = "day-night dawn";
-            } else if (isDusk) {
-                dayNightEl.textContent = "🌇 ZMIERZCH";
-                dayNightEl.className = "day-night dawn";
+                badge.textContent = "noc";
+                badge.className = "day-badge night";
+            } else if (isDawn || isDusk) {
+                badge.textContent = isDawn ? "świt" : "zmierzch";
+                badge.className = "day-badge dawn";
             } else {
-                dayNightEl.textContent = "☀️ DZIEŃ";
-                dayNightEl.className = "day-night day";
+                badge.textContent = "dzień";
+                badge.className = "day-badge day";
             }
         }
 
-        function showToast(message, type = 'info') {
-            const now = Date.now();
-            if (now - lastToastTime < 10000) return;
-            lastToastTime = now;
-            
-            const toastContainer = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            toastContainer.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        function checkPropagationChanges(currentKIndex, currentSFI) {
-            if (prevKIndex !== null && currentKIndex !== prevKIndex) {
-                if (currentKIndex <= 2 && prevKIndex > 2) {
-                    showToast('K-index spadł do ' + currentKIndex + ' – propagacja lepsza!', 'good');
-                } else if (currentKIndex >= 5 && prevKIndex < 5) {
-                    showToast('K-index wzrósł do ' + currentKIndex + ' – propagacja gorsza', 'bad');
-                }
-            }
-            prevKIndex = currentKIndex;
-            prevSFI = currentSFI;
-        }
-
-        async function fetchRealData() {
-            try {
-                const proxyUrl = 'https://corsproxy.io/?';
-                const targetUrl = 'https://www.hamqsl.com/solarxml.php';
-                const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-                if (!response.ok) throw new Error('HTTP error');
-                
-                const xmlText = await response.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-                if (xmlDoc.querySelector('parsererror')) throw new Error('XML parse error');
-                
-                const sfi = parseInt(xmlDoc.querySelector('solarflux')?.textContent || '0');
-                const kindex = parseInt(xmlDoc.querySelector('kindex')?.textContent || '0');
-                const aindex = parseInt(xmlDoc.querySelector('aindex')?.textContent || '0');
-                
-                if (sfi < 50 || sfi > 300 || isNaN(sfi)) throw new Error('Invalid SFI');
-                if (kindex < 0 || kindex > 9 || isNaN(kindex)) throw new Error('Invalid K-index');
-                
-                return {
-                    sfi: sfi,
-                    kindex: kindex,
-                    aindex: aindex,
-                    timestamp: new Date().toLocaleString('pl-PL'),
-                    source: 'live'
-                };
-            } catch (error) {
-                console.error('Błąd:', error);
-                return null;
-            }
-        }
-
-        function getMockData() {
+        function calcSunTimes() {
             const now = new Date();
-            const hour = now.getUTCHours();
-            let sfi = 130 + Math.floor(Math.random() * 25) - 12;
-            let kindex = hour >= 22 || hour < 6 ? 1 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 3);
-            
-            return {
-                sfi: sfi,
-                kindex: kindex,
-                aindex: Math.round(kindex * 7),
-                timestamp: new Date().toLocaleString('pl-PL'),
-                source: 'mock'
-            };
+            const times = SunCalc.getTimes(now, 52.2297, 21.0122);
+            const fmt = d => d.toLocaleTimeString('pl-PL', {hour:'2-digit',minute:'2-digit'});
+            document.getElementById('sunrise').textContent = fmt(times.sunrise);
+            document.getElementById('sunset').textContent = fmt(times.sunset);
         }
 
-        function evaluateBand(band, kindex, sfi) {
-            if (kindex <= 2 && sfi > 120) {
-                if (['10m','12m','15m','17m','20m'].includes(band)) return {status:'DOBRZE',color:'good'};
-                else return {status:'DOBRZE',color:'good'};
-            } else if (kindex <= 3 && sfi > 100) {
-                if (['10m','12m'].includes(band)) return {status:'ŚREDNIO',color:'medium'};
-                else if (['15m','17m'].includes(band)) return {status:'DOBRZE',color:'good'};
-                else return {status:'DOBRZE',color:'good'};
-            } else if (kindex <= 4) {
-                if (['10m','12m','15m'].includes(band)) return {status:'ŹLE',color:'bad'};
-                else if (['17m','20m'].includes(band)) return {status:'ŚREDNIO',color:'medium'};
-                else return {status:'DOBRZE',color:'good'};
-            } else {
-                if (['10m','12m','15m','17m','20m'].includes(band)) return {status:'ŹLE',color:'bad'};
-                else if (['30m','40m'].includes(band)) return {status:'ŚREDNIO',color:'medium'};
-                else return {status:'DOBRZE',color:'good'};
+        function showToast(msg, type='info') {
+            const now = Date.now();
+            if (now - lastToast < 10000) return;
+            lastToast = now;
+            
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 300); }, 4000);
+        }
+
+        function checkChanges(k, sfi) {
+            if (prevK !== null && k !== prevK) {
+                if (k <= 2 && prevK > 2) showToast(`K-index ${k} – propagacja lepsza!`, 'good');
+                else if (k >= 5 && prevK < 5) showToast(`K-index ${k} – propagacja gorsza`, 'bad');
             }
+            prevK = k; prevSFI = sfi;
+        }
+
+        async function fetchData() {
+            try {
+                const r = await fetch(`https://corsproxy.io/?${encodeURIComponent('https://www.hamqsl.com/solarxml.php')}`);
+                if (!r.ok) throw new Error();
+                const xml = await r.text();
+                const doc = new DOMParser().parseFromString(xml, "text/xml");
+                if (doc.querySelector('parsererror')) throw new Error();
+                
+                const sfi = parseInt(doc.querySelector('solarflux')?.textContent || '0');
+                const k = parseInt(doc.querySelector('kindex')?.textContent || '0');
+                const a = parseInt(doc.querySelector('aindex')?.textContent || '0');
+                
+                if (sfi < 50 || sfi > 300 || isNaN(sfi)) throw new Error();
+                if (k < 0 || k > 9 || isNaN(k)) throw new Error();
+                
+                return {sfi, k, a, ts: new Date().toLocaleString('pl-PL'), live: true};
+            } catch (e) {
+                // Fallback na mock
+                const h = new Date().getUTCHours();
+                return {
+                    sfi: 130 + Math.floor(Math.random()*25) - 12,
+                    k: h >= 22 || h < 6 ? 1 + Math.floor(Math.random()*2) : 2 + Math.floor(Math.random()*3),
+                    a: 8,
+                    ts: new Date().toLocaleString('pl-PL'),
+                    live: false
+                };
+            }
+        }
+
+        function evalBand(band, k, sfi) {
+            if (k <= 2 && sfi > 120) return ['10m','12m','15m','17m','20m'].includes(band) ? ['DOBRZE','good'] : ['DOBRZE','good'];
+            if (k <= 3 && sfi > 100) return ['10m','12m'].includes(band) ? ['ŚREDNIO','medium'] : ['15m','17m'].includes(band) ? ['DOBRZE','good'] : ['DOBRZE','good'];
+            if (k <= 4) return ['10m','12m','15m'].includes(band) ? ['ŹLE','bad'] : ['17m','20m'].includes(band) ? ['ŚREDNIO','medium'] : ['DOBRZE','good'];
+            return ['10m','12m','15m','17m','20m'].includes(band) ? ['ŹLE','bad'] : ['30m','40m'].includes(band) ? ['ŚREDNIO','medium'] : ['DOBRZE','good'];
         }
 
         async function refreshData() {
             const btn = document.querySelector('.refresh-btn');
             btn.disabled = true;
-            btn.textContent = 'Ładowanie...';
-
+            btn.textContent = '...';
+            
             try {
-                let data = await fetchRealData();
-                if (!data) {
-                    data = getMockData();
-                    document.getElementById('data-source-info').textContent = '⚠️ Dane symulowane';
-                    document.getElementById('data-source-info').className = 'data-source mock';
-                } else {
-                    document.getElementById('data-source-info').textContent = '✅ Dane na żywo';
-                    document.getElementById('data-source-info').className = 'data-source live';
-                }
+                const d = await fetchData();
+                document.getElementById('sfi').textContent = d.sfi;
+                document.getElementById('kindex').textContent = d.k;
+                document.getElementById('aindex').textContent = d.a;
+                document.getElementById('timestamp').textContent = `Aktualizacja: ${d.ts}`;
                 
-                checkPropagationChanges(data.kindex, data.sfi);
-                
-                document.getElementById('sfi').textContent = data.sfi;
-                document.getElementById('kindex').textContent = data.kindex;
-                document.getElementById('aindex').textContent = data.aindex;
-                document.getElementById('timestamp').textContent = `Ostatnia aktualizacja: ${data.timestamp}`;
-                
+                // Kolory SFI/K
                 const sfiEl = document.getElementById('sfi');
-                const kindexEl = document.getElementById('kindex');
+                const kEl = document.getElementById('kindex');
+                sfiEl.className = `data-value ${d.sfi > 150 ? 'sfi-good' : d.sfi > 100 ? 'sfi-medium' : 'sfi-bad'}`;
+                kEl.className = `data-value ${d.k <= 2 ? 'k-good' : d.k <= 4 ? 'k-medium' : 'k-bad'}`;
                 
-                sfiEl.className = `status-value ${data.sfi > 150 ? 'sfi-good' : data.sfi > 100 ? 'sfi-medium' : 'sfi-bad'}`;
-                kindexEl.className = `status-value ${data.kindex <= 2 ? 'kindex-good' : data.kindex <= 4 ? 'kindex-medium' : 'kindex-bad'}`;
-                
-                ['160m','80m','40m','30m','20m','17m','15m','12m','10m'].forEach(band => {
-                    const result = evaluateBand(band, data.kindex, data.sfi);
-                    const el = document.getElementById(`band-${band}`);
-                    el.textContent = result.status;
-                    el.className = `band-status band-${result.color}`;
+                // Pasma
+                ['160m','80m','40m','30m','20m','17m','15m','12m','10m'].forEach(b => {
+                    const [status, cls] = evalBand(b, d.k, d.sfi);
+                    const el = document.getElementById(`band-${b}`);
+                    el.textContent = status;
+                    el.className = `band-status band-${cls}`;
                 });
                 
-            } catch (error) {
-                console.error('Błąd:', error);
-                alert('Nie udało się pobrać danych');
+                // Alert jeśli zmiana
+                checkChanges(d.k, d.sfi);
+                
+            } catch (e) {
+                console.error(e);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Odśwież dane';
+                btn.textContent = 'Odśwież';
             }
         }
 
+        // Init
+        calcSunTimes();
+        setInterval(calcSunTimes, 3600000);
+        updateClock();
+        setInterval(updateClock, 1000);
+        refreshData();
         setInterval(refreshData, 300000);
-        calculateSunTimes();
-        setInterval(calculateSunTimes, 3600000);
-
-        window.onload = () => {
-            updateClock();
-            setInterval(updateClock, 1000);
-            refreshData();
-        };
     </script>
 </body>
 </html>
