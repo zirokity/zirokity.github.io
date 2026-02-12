@@ -15,23 +15,48 @@
             line-height: 1.5;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
         }
         header {
             text-align: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #333;
+            margin-bottom: 15px;
         }
         h1 {
-            font-size: 1.8em;
+            font-size: 1.6em;
             color: #5eead4;
             letter-spacing: -0.5px;
+            margin-bottom: 8px;
         }
         .subtitle {
             color: #777;
-            font-size: 0.95em;
+            font-size: 0.9em;
+        }
+        
+        /* DUŻY WYŚWIETLACZ DZIEŃ/NOC */
+        .day-night-display {
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            font-size: 1.8em;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .day-night-display.day {
+            background: linear-gradient(135deg, #4a2109 0%, #854d0e 100%);
+            color: #fef3c7;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+        .day-night-display.night {
+            background: linear-gradient(135deg, #0e2a47 0%, #1e40af 100%);
+            color: #93c5fd;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .day-night-display.dawn {
+            background: linear-gradient(135deg, #431407 0%, #92400e 100%);
+            color: #ffedd5;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
         }
         
         /* Dane SFI/K-index */
@@ -129,17 +154,6 @@
             color: #777;
             font-size: 0.85em;
         }
-        .day-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-        .day-badge.day { background: #4a2109; color: #fef3c7; }
-        .day-badge.night { background: #0e2a47; color: #93c5fd; }
-        .day-badge.dawn { background: #431407; color: #ffedd5; }
         
         .refresh-btn {
             width: 100%;
@@ -158,6 +172,39 @@
             background: #202020;
             border-color: #5eead4;
         }
+        
+        /* Źródła danych */
+        .sources {
+            background: #151515;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 25px;
+            font-size: 0.85em;
+        }
+        .sources h3 {
+            color: #8b5cf6;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        .sources p {
+            margin-bottom: 8px;
+            color: #aaa;
+        }
+        .sources a {
+            color: #5eead4;
+            text-decoration: none;
+        }
+        .sources a:hover {
+            text-decoration: underline;
+        }
+        .data-source {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #2a2a2a;
+            color: #777;
+        }
+        .data-source.live { color: #34d399; font-weight: bold; }
+        .data-source.mock { color: #fbbf24; font-weight: bold; }
         
         .timestamp {
             text-align: center;
@@ -197,6 +244,11 @@
             <h1>📡 Propagacja PL</h1>
             <div class="subtitle">Dane na żywo z hamqsl.com</div>
         </header>
+
+        <!-- DUŻY WYŚWIETLACZ DZIEŃ/NOC -->
+        <div class="day-night-display" id="day-night-display">
+            Ładowanie...
+        </div>
 
         <!-- Dane SFI/K-index -->
         <div class="data-header">
@@ -249,7 +301,7 @@
         <div class="clocks">
             <div class="clock">
                 <div class="clock-time" id="polish-time">--:--:--</div>
-                <div class="clock-label">PL <span class="day-badge" id="day-badge">...</span></div>
+                <div class="clock-label">Czas Polski</div>
             </div>
             <div class="clock">
                 <div class="clock-time" id="utc-time">--:--:--</div>
@@ -257,7 +309,19 @@
             </div>
         </div>
 
-        <button class="refresh-btn" onclick="refreshData()">Odśwież</button>
+        <button class="refresh-btn" onclick="refreshData()">Odśwież dane</button>
+
+        <!-- Źródła danych -->
+        <div class="sources">
+            <h3>📡 Źródła danych</h3>
+            <p><strong>SFI (Solar Flux Index)</strong> – mierzony codziennie w obserwatorium w <strong>Penticton, Kanada</strong> o godzinie 17:00 UTC.</p>
+            <p><strong>K-index</strong> – mierzy aktywność geomagnetyczną Ziemi. Dane z <strong>NOAA SWPC</strong> (Boulder, USA).</p>
+            <p><strong>Dane propagacyjne</strong> – obliczane na podstawie SFI i K-index zgodnie z modelem hamqsl.com.</p>
+            
+            <div class="data-source" id="data-source-info">
+                Ładowanie danych...
+            </div>
+        </div>
 
         <div class="timestamp" id="timestamp">Ładowanie...</div>
     </div>
@@ -273,13 +337,13 @@
             
             document.getElementById('polish-time').textContent = plTime;
             document.getElementById('utc-time').textContent = utcTime;
-            updateDayBadge();
+            updateDayNightDisplay();
         }
 
-        function updateDayBadge() {
+        function updateDayNightDisplay() {
             const now = new Date();
             const times = SunCalc.getTimes(now, 52.2297, 21.0122);
-            const badge = document.getElementById('day-badge');
+            const display = document.getElementById('day-night-display');
             
             const isNight = now < times.sunrise || now > times.sunset;
             const dawnStart = new Date(times.sunrise.getTime() - 20*60000);
@@ -290,14 +354,14 @@
             const isDusk = now >= duskStart && now <= duskEnd;
             
             if (isNight) {
-                badge.textContent = "noc";
-                badge.className = "day-badge night";
+                display.textContent = "🌙 NOC";
+                display.className = "day-night-display night";
             } else if (isDawn || isDusk) {
-                badge.textContent = isDawn ? "świt" : "zmierzch";
-                badge.className = "day-badge dawn";
+                display.textContent = isDawn ? "🌅 ŚWIT" : "🌇 ZMIERZCH";
+                display.className = "day-night-display dawn";
             } else {
-                badge.textContent = "dzień";
-                badge.className = "day-badge day";
+                display.textContent = "☀️ DZIEŃ";
+                display.className = "day-night-display day";
             }
         }
 
@@ -380,13 +444,13 @@
         async function refreshData() {
             const btn = document.querySelector('.refresh-btn');
             btn.disabled = true;
-            btn.textContent = '...';
+            btn.textContent = 'Ładowanie...';
             
             try {
                 const d = await fetchData();
                 document.getElementById('sfi').textContent = d.sfi;
                 document.getElementById('kindex').textContent = d.k;
-                document.getElementById('timestamp').textContent = `Aktualizacja: ${d.ts}`;
+                document.getElementById('timestamp').textContent = `Ostatnia aktualizacja: ${d.ts}`;
                 
                 // Kolory SFI/K
                 const sfiEl = document.getElementById('sfi');
@@ -397,6 +461,16 @@
                 // Aktualizuj warunki pasm
                 updateBandConditions(d.k);
                 
+                // Status danych
+                const sourceInfo = document.getElementById('data-source-info');
+                if (d.live) {
+                    sourceInfo.textContent = '✅ Dane na żywo z hamqsl.com';
+                    sourceInfo.className = 'data-source live';
+                } else {
+                    sourceInfo.textContent = '⚠️ Dane symulowane (brak połączenia)';
+                    sourceInfo.className = 'data-source mock';
+                }
+                
                 // Alert jeśli zmiana
                 checkChanges(d.k);
                 
@@ -404,7 +478,7 @@
                 console.error(e);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Odśwież';
+                btn.textContent = 'Odśwież dane';
             }
         }
 
