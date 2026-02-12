@@ -214,35 +214,13 @@
             padding-top: 12px;
             border-top: 1px solid #2a2a2a;
         }
-        
-        .toast-container {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 9999;
-        }
-        .toast {
-            background: #1a1a1a;
-            color: #ddd;
-            padding: 10px 18px;
-            border-radius: 5px;
-            margin-bottom: 8px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
-            border-left: 3px solid #5eead4;
-            min-width: 260px;
-            font-size: 0.95em;
-        }
-        .toast.good { border-left-color: #34d399; }
-        .toast.bad { border-left-color: #f87171; }
-        .toast.warning { border-left-color: #fbbf24; }
     </style>
 </head>
 <body>
-    <div class="toast-container" id="toast-container"></div>
     <div class="container">
         <header>
             <h1>📡 Propagacja PL</h1>
-            <div class="subtitle">Dane na żywo z hamqsl.com</div>
+            <div class="subtitle">Dane z hamqsl.com</div>
         </header>
 
         <!-- DUŻY WYŚWIETLACZ DZIEŃ/NOC -->
@@ -280,13 +258,13 @@
                     </tr>
                     <tr>
                         <td class="band-name">30m-20m</td>
-                        <td class="day-condition condition-fair" id="band-30m-20m-day">Fair</td>
+                        <td class="day-condition condition-good" id="band-30m-20m-day">Good</td>
                         <td class="night-condition condition-good" id="band-30m-20m-night">Good</td>
                     </tr>
                     <tr>
                         <td class="band-name">17m-15m</td>
                         <td class="day-condition condition-good" id="band-17m-15m-day">Good</td>
-                        <td class="night-condition condition-good" id="band-17m-15m-night">Good</td>
+                        <td class="night-condition condition-fair" id="band-17m-15m-night">Fair</td>
                     </tr>
                     <tr>
                         <td class="band-name">12m-10m</td>
@@ -314,9 +292,10 @@
         <!-- Źródła danych -->
         <div class="sources">
             <h3>📡 Źródła danych</h3>
-            <p><strong>SFI (Solar Flux Index)</strong> – mierzony codziennie w obserwatorium w <strong>Penticton, Kanada</strong> o godzinie 17:00 UTC.</p>
-            <p><strong>K-index</strong> – mierzy aktywność geomagnetyczną Ziemi. Dane z <strong>NOAA SWPC</strong> (Boulder, USA).</p>
-            <p><strong>Dane propagacyjne</strong> – obliczane na podstawie SFI i K-index zgodnie z modelem hamqsl.com.</p>
+            <p><strong>SFI (Solar Flux Index)</strong> – pomiar z obserwatorium w <strong>Penticton, Kanada</strong>.</p>
+            <p><strong>K-index</strong> – aktywność geomagnetyczna Ziemi z <strong>NOAA SWPC</strong>.</p>
+            <p><strong>Warunki pasm</strong> – obliczane lokalnie na podstawie SFI i K-index zgodnie z modelem propagacyjnym.</p>
+            <p><strong>Dane na żywo:</strong> <a href="https://www.hamqsl.com/solar.html" target="_blank">hamqsl.com/solar.html</a></p>
             
             <div class="data-source" id="data-source-info">
                 Ładowanie danych...
@@ -327,12 +306,15 @@
     </div>
 
     <script>
-        // Zmienne do śledzenia zmian
-        let prevK = null, lastToast = 0;
-
+        // Zegar - aktualizacja co sekundę
         function updateClock() {
             const now = new Date();
-            const plTime = now.toLocaleTimeString('pl-PL', {hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Warsaw'});
+            const plTime = now.toLocaleTimeString('pl-PL', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Europe/Warsaw'
+            });
             const utcTime = now.toISOString().substring(11, 19);
             
             document.getElementById('polish-time').textContent = plTime;
@@ -340,6 +322,7 @@
             updateDayNightDisplay();
         }
 
+        // Aktualizuj wyświetlacz dnia/nocy
         function updateDayNightDisplay() {
             const now = new Date();
             const times = SunCalc.getTimes(now, 52.2297, 21.0122);
@@ -365,84 +348,136 @@
             }
         }
 
-        function showToast(msg, type='info') {
-            const now = Date.now();
-            if (now - lastToast < 10000) return;
-            lastToast = now;
-            
-            const c = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = `toast ${type}`;
-            t.textContent = msg;
-            c.appendChild(t);
-            setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 300); }, 4000);
-        }
-
-        function checkChanges(k) {
-            if (prevK !== null && k !== prevK) {
-                if (k <= 2 && prevK > 2) showToast(`K-index ${k} – propagacja lepsza!`, 'good');
-                else if (k >= 5 && prevK < 5) showToast(`K-index ${k} – propagacja gorsza`, 'bad');
-            }
-            prevK = k;
-        }
-
+        // Pobierz dane z hamqsl.com przez proxy
         async function fetchData() {
             try {
-                const r = await fetch(`https://corsproxy.io/?${encodeURIComponent('https://www.hamqsl.com/solarxml.php')}`);
-                if (!r.ok) throw new Error();
-                const xml = await r.text();
-                const doc = new DOMParser().parseFromString(xml, "text/xml");
-                if (doc.querySelector('parsererror')) throw new Error();
+                const proxyUrl = 'https://corsproxy.io/?';
+                const targetUrl = 'https://www.hamqsl.com/solarxml.php';
+                const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), { mode: 'cors' });
                 
-                const sfi = parseInt(doc.querySelector('solarflux')?.textContent || '0');
-                const k = parseInt(doc.querySelector('kindex')?.textContent || '0');
-                const a = parseInt(doc.querySelector('aindex')?.textContent || '0');
+                if (!response.ok) {
+                    throw new Error('Błąd odpowiedzi');
+                }
                 
-                if (sfi < 50 || sfi > 300 || isNaN(sfi)) throw new Error();
-                if (k < 0 || k > 9 || isNaN(k)) throw new Error();
+                const xmlText = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
                 
-                return {sfi, k, a, ts: new Date().toLocaleString('pl-PL'), live: true};
-            } catch (e) {
-                // Fallback na mock
-                const h = new Date().getUTCHours();
+                if (xmlDoc.querySelector('parsererror')) {
+                    throw new Error('Błąd parsowania XML');
+                }
+                
+                const sfiEl = xmlDoc.querySelector('solarflux');
+                const kindexEl = xmlDoc.querySelector('kindex');
+                
+                if (!sfiEl || !kindexEl) {
+                    throw new Error('Brak danych w XML');
+                }
+                
+                const sfi = parseInt(sfiEl.textContent || '0');
+                const kindex = parseInt(kindexEl.textContent || '0');
+                
+                if (isNaN(sfi) || isNaN(kindex)) {
+                    throw new Error('Nieprawidłowe dane');
+                }
+                
                 return {
-                    sfi: 130 + Math.floor(Math.random()*25) - 12,
-                    k: h >= 22 || h < 6 ? 1 + Math.floor(Math.random()*2) : 2 + Math.floor(Math.random()*3),
-                    a: 8,
-                    ts: new Date().toLocaleString('pl-PL'),
-                    live: false
+                    sfi: sfi,
+                    kindex: kindex,
+                    timestamp: new Date().toLocaleString('pl-PL'),
+                    source: 'live'
+                };
+                
+            } catch (error) {
+                console.warn('Błąd pobierania danych:', error);
+                // Fallback na mock dane
+                const now = new Date();
+                const hour = now.getUTCHours();
+                const mockK = hour >= 20 || hour < 8 ? 1 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 3);
+                const mockSFI = 130 + Math.floor(Math.random() * 25) - 12;
+                
+                return {
+                    sfi: mockSFI,
+                    kindex: mockK,
+                    timestamp: new Date().toLocaleString('pl-PL'),
+                    source: 'mock'
                 };
             }
         }
 
-        // Poprawiona logika warunków propagacji
-        function updateBandConditions(sfi, k) {
-            // 80m-40m
-            // Dzień: zawsze Poor (D-layer absorbuje niskie częstotliwości)
+        // Oblicz warunki pasm na podstawie SFI i K-index
+        function calculateBandConditions(sfi, kindex) {
+            // 80m-40m: zawsze Poor w dzień (D-layer absorbuje), Good w nocy
             document.getElementById('band-80m-40m-day').textContent = "Poor";
             document.getElementById('band-80m-40m-day').className = "day-condition condition-poor";
-            // Noc: Good jeśli K-index < 4
-            document.getElementById('band-80m-40m-night').textContent = k <= 3 ? "Good" : "Poor";
-            document.getElementById('band-80m-40m-night').className = "night-condition " + (k <= 3 ? "condition-good" : "condition-poor");
+            document.getElementById('band-80m-40m-night').textContent = kindex <= 3 ? "Good" : "Fair";
+            document.getElementById('band-80m-40m-night').className = "night-condition " + (kindex <= 3 ? "condition-good" : "condition-fair");
             
-            // 30m-20m
-            // Dzień: Fair jeśli K-index > 2, Good jeśli K-index <= 2
-            document.getElementById('band-30m-20m-day').textContent = k > 2 ? "Fair" : "Good";
-            document.getElementById('band-30m-20m-day').className = "day-condition " + (k > 2 ? "condition-fair" : "condition-good");
-            // Noc: Good jeśli K-index < 4
-            document.getElementById('band-30m-20m-night').textContent = k <= 3 ? "Good" : "Poor";
-            document.getElementById('band-30m-20m-night').className = "night-condition " + (k <= 3 ? "condition-good" : "condition-poor");
+            // 30m-20m: Good w dzień i nocy przy dobrym K-index
+            document.getElementById('band-30m-20m-day').textContent = kindex <= 3 ? "Good" : "Fair";
+            document.getElementById('band-30m-20m-day').className = "day-condition " + (kindex <= 3 ? "condition-good" : "condition-fair");
+            document.getElementById('band-30m-20m-night').textContent = kindex <= 3 ? "Good" : "Fair";
+            document.getElementById('band-30m-20m-night').className = "night-condition " + (kindex <= 3 ? "condition-good" : "condition-fair");
             
-            // 17m-15m
-            // Dzień: Good jeśli SFI > 120 i K-index < 3, Fair w przeciwnym przypadku
-            document.getElementById('band-17m-15m-day').textContent = (sfi > 120 && k < 3) ? "Good" : "Fair";
-            document.getElementById('band-17m-15m-day').className = "day-condition " + ((sfi > 120 && k < 3) ? "condition-good" : "condition-fair");
-            // Noc: Good jeśli K-index < 4
-            document.getElementById('band-17m-15m-night').textContent = k <= 3 ? "Good" : "Poor";
-            document.getElementById('band-17m-15m-night').className = "night-condition " + (k <= 3 ? "condition-good" : "condition-poor");
+            // 17m-15m: Good w dzień przy dobrym SFI, Fair w nocy
+            document.getElementById('band-17m-15m-day').textContent = sfi > 120 && kindex <= 3 ? "Good" : "Fair";
+            document.getElementById('band-17m-15m-day').className = "day-condition " + (sfi > 120 && kindex <= 3 ? "condition-good" : "condition-fair");
+            document.getElementById('band-17m-15m-night').textContent = kindex <= 2 ? "Good" : "Fair";
+            document.getElementById('band-17m-15m-night').className = "night-condition " + (kindex <= 2 ? "condition-good" : "condition-fair");
             
-            // 12m-10m
-            // Dzień: Good jeśli SFI > 150 i K-index < 2, Fair jeśli SFI > 120 i K-index < 3, Poor w przeciwnym przypadku
-            if (sfi > 150 && k < 2) {
-                document.getElementById('band-12m-10m-day').textContent = "Good";
-                document.getElementById('band-1
+            // 12m-10m: Good w dzień tylko przy wysokim SFI, Poor w nocy
+            document.getElementById('band-12m-10m-day').textContent = sfi > 140 && kindex <= 2 ? "Good" : (sfi > 110 && kindex <= 3 ? "Fair" : "Poor");
+            document.getElementById('band-12m-10m-day').className = "day-condition " + 
+                (sfi > 140 && kindex <= 2 ? "condition-good" : (sfi > 110 && kindex <= 3 ? "condition-fair" : "condition-poor"));
+            document.getElementById('band-12m-10m-night').textContent = kindex <= 2 ? "Fair" : "Poor";
+            document.getElementById('band-12m-10m-night').className = "night-condition " + (kindex <= 2 ? "condition-fair" : "condition-poor");
+        }
+
+        // Odśwież dane
+        async function refreshData() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.disabled = true;
+            btn.textContent = 'Ładowanie...';
+            
+            try {
+                const data = await fetchData();
+                
+                // Aktualizuj SFI/K-index
+                document.getElementById('sfi').textContent = data.sfi;
+                document.getElementById('kindex').textContent = data.kindex;
+                document.getElementById('timestamp').textContent = `Ostatnia aktualizacja: ${data.timestamp}`;
+                
+                // Ustaw kolory
+                const sfiEl = document.getElementById('sfi');
+                const kEl = document.getElementById('kindex');
+                
+                sfiEl.className = `data-value ${data.sfi > 150 ? 'sfi-good' : data.sfi > 100 ? 'sfi-medium' : 'sfi-bad'}`;
+                kEl.className = `data-value ${data.kindex <= 2 ? 'k-good' : data.kindex <= 4 ? 'k-medium' : 'k-bad'}`;
+                
+                // Oblicz warunki pasm
+                calculateBandConditions(data.sfi, data.kindex);
+                
+                // Status źródła
+                const sourceInfo = document.getElementById('data-source-info');
+                sourceInfo.textContent = data.source === 'live' 
+                    ? '✅ Dane na żywo z hamqsl.com' 
+                    : '⚠️ Dane symulowane (offline)';
+                sourceInfo.className = `data-source ${data.source === 'live' ? 'live' : 'mock'}`;
+                
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Nie udało się pobrać danych. Sprawdź połączenie internetowe.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Odśwież dane';
+            }
+        }
+
+        // Init
+        updateClock();
+        setInterval(updateClock, 1000);
+        refreshData();
+        setInterval(refreshData, 300000);
+    </script>
+</body>
+</html>
