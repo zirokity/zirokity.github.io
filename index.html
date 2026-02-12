@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📡 Propagacja dla Polski</title>
+    <title>📡 Propagacja PL</title>
     <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -415,78 +415,34 @@
             }
         }
 
-        function updateBandConditions(k) {
+        // Poprawiona logika warunków propagacji
+        function updateBandConditions(sfi, k) {
             // 80m-40m
-            document.getElementById('band-80m-40m-day').textContent = k > 2 ? "Poor" : "Good";
-            document.getElementById('band-80m-40m-day').className = "day-condition " + (k > 2 ? "condition-poor" : "condition-good");
+            // Dzień: zawsze Poor (D-layer absorbuje niskie częstotliwości)
+            document.getElementById('band-80m-40m-day').textContent = "Poor";
+            document.getElementById('band-80m-40m-day').className = "day-condition condition-poor";
+            // Noc: Good jeśli K-index < 4
             document.getElementById('band-80m-40m-night').textContent = k <= 3 ? "Good" : "Poor";
             document.getElementById('band-80m-40m-night').className = "night-condition " + (k <= 3 ? "condition-good" : "condition-poor");
             
             // 30m-20m
+            // Dzień: Fair jeśli K-index > 2, Good jeśli K-index <= 2
             document.getElementById('band-30m-20m-day').textContent = k > 2 ? "Fair" : "Good";
             document.getElementById('band-30m-20m-day').className = "day-condition " + (k > 2 ? "condition-fair" : "condition-good");
+            // Noc: Good jeśli K-index < 4
             document.getElementById('band-30m-20m-night').textContent = k <= 3 ? "Good" : "Poor";
             document.getElementById('band-30m-20m-night').className = "night-condition " + (k <= 3 ? "condition-good" : "condition-poor");
             
             // 17m-15m
-            document.getElementById('band-17m-15m-day').textContent = k <= 4 ? "Good" : "Fair";
-            document.getElementById('band-17m-15m-day').className = "day-condition " + (k <= 4 ? "condition-good" : "condition-fair");
-            document.getElementById('band-17m-15m-night').textContent = k <= 4 ? "Good" : "Fair";
-            document.getElementById('band-17m-15m-night').className = "night-condition " + (k <= 4 ? "condition-good" : "condition-fair");
+            // Dzień: Good jeśli SFI > 120 i K-index < 3, Fair w przeciwnym przypadku
+            document.getElementById('band-17m-15m-day').textContent = (sfi > 120 && k < 3) ? "Good" : "Fair";
+            document.getElementById('band-17m-15m-day').className = "day-condition " + ((sfi > 120 && k < 3) ? "condition-good" : "condition-fair");
+            // Noc: Good jeśli K-index < 4
+            document.getElementById('band-17m-15m-night').textContent = k <= 3 ? "Good" : "Poor";
+            document.getElementById('band-17m-15m-night').className = "night-condition " + (k <= 3 ? "condition-good" : "condition-poor");
             
             // 12m-10m
-            document.getElementById('band-12m-10m-day').textContent = k <= 3 ? "Good" : "Fair";
-            document.getElementById('band-12m-10m-day').className = "day-condition " + (k <= 3 ? "condition-good" : "condition-fair");
-            document.getElementById('band-12m-10m-night').textContent = k <= 2 ? "Good" : "Poor";
-            document.getElementById('band-12m-10m-night').className = "night-condition " + (k <= 2 ? "condition-good" : "condition-poor");
-        }
-
-        async function refreshData() {
-            const btn = document.querySelector('.refresh-btn');
-            btn.disabled = true;
-            btn.textContent = 'Ładowanie...';
-            
-            try {
-                const d = await fetchData();
-                document.getElementById('sfi').textContent = d.sfi;
-                document.getElementById('kindex').textContent = d.k;
-                document.getElementById('timestamp').textContent = `Ostatnia aktualizacja: ${d.ts}`;
-                
-                // Kolory SFI/K
-                const sfiEl = document.getElementById('sfi');
-                const kEl = document.getElementById('kindex');
-                sfiEl.className = `data-value ${d.sfi > 150 ? 'sfi-good' : d.sfi > 100 ? 'sfi-medium' : 'sfi-bad'}`;
-                kEl.className = `data-value ${d.k <= 2 ? 'k-good' : d.k <= 4 ? 'k-medium' : 'k-bad'}`;
-                
-                // Aktualizuj warunki pasm
-                updateBandConditions(d.k);
-                
-                // Status danych
-                const sourceInfo = document.getElementById('data-source-info');
-                if (d.live) {
-                    sourceInfo.textContent = '✅ Dane na żywo z hamqsl.com';
-                    sourceInfo.className = 'data-source live';
-                } else {
-                    sourceInfo.textContent = '⚠️ Dane symulowane (brak połączenia)';
-                    sourceInfo.className = 'data-source mock';
-                }
-                
-                // Alert jeśli zmiana
-                checkChanges(d.k);
-                
-            } catch (e) {
-                console.error(e);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Odśwież dane';
-            }
-        }
-
-        // Init
-        updateClock();
-        setInterval(updateClock, 1000);
-        refreshData();
-        setInterval(refreshData, 300000);
-    </script>
-</body>
-</html>
+            // Dzień: Good jeśli SFI > 150 i K-index < 2, Fair jeśli SFI > 120 i K-index < 3, Poor w przeciwnym przypadku
+            if (sfi > 150 && k < 2) {
+                document.getElementById('band-12m-10m-day').textContent = "Good";
+                document.getElementById('band-1
