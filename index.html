@@ -74,8 +74,8 @@
             font-size: 0.8em;
             color: #777;
         }
-        .data-source.live { color: #4ade80; }
-        .data-source.mock { color: #fbbf24; }
+        .data-source.live { color: #4ade80; font-weight: bold; }
+        .data-source.mock { color: #fbbf24; font-weight: bold; }
         .status {
             display: flex;
             justify-content: space-between;
@@ -339,27 +339,18 @@
 
         <div class="sources">
             <h3>Źródła danych</h3>
-            <p><strong>SFI (Solar Flux Index)</strong> – mierzony codziennie w obserwatorium w <strong>Penticton, Kanada</strong> o godzinie 17:00 UTC. Dane pochodzą z:</p>
-            <ul>
-                <li><a href="https://www.spaceweather.gc.ca" target="_blank">Natural Resources Canada (NRCan)</a></li>
-                <li><a href="https://www.swpc.noaa.gov" target="_blank">NOAA Space Weather Prediction Center</a></li>
-            </ul>
+            <p><strong>SFI (Solar Flux Index)</strong> – mierzony codziennie w obserwatorium w <strong>Penticton, Kanada</strong> o godzinie 17:00 UTC.</p>
             
-            <p><strong>K-index i A-index</strong> – mierzą aktywność geomagnetyczną Ziemi. Dane z:</p>
-            <ul>
-                <li><a href="https://www.swpc.noaa.gov" target="_blank">NOAA SWPC (Boulder, USA)</a></li>
-                <li><a href="https://www.gfz-potsdam.de/en/kp-index" target="_blank">GFZ Potsdam (Niemcy)</a></li>
-            </ul>
+            <p><strong>K-index i A-index</strong> – mierzą aktywność geomagnetyczną Ziemi.</p>
             
-            <p><strong>Propagacja pasm HF</strong> – obliczana na podstawie:</p>
+            <p><strong>Dane pochodzą z:</strong></p>
             <ul>
-                <li><a href="https://prop.kc2g.com" target="_blank">prop.kc2g.com</a> – dane w czasie rzeczywistym</li>
-                <li><a href="https://www.voacap.com" target="_blank">VOACAP</a> – model propagacyjny</li>
-                <li><a href="https://www.dxmaps.com" target="_blank">DX Maps</a> – raporty stacji</li>
+                <li><a href="https://www.hamqsl.com/solar.html" target="_blank">hamqsl.com</a> – specjalnie dla radioamatorów</li>
+                <li><a href="https://prop.kc2g.com" target="_blank">prop.kc2g.com</a> – wizualizacja propagacji</li>
             </ul>
             
             <div class="data-source" id="data-source-info">
-                <!-- Tu pojawi się info o źródle danych -->
+                Ładowanie danych...
             </div>
         </div>
 
@@ -398,34 +389,40 @@
         setInterval(updateClock, 1000);
         updateClock(); // Natychmiastowe uruchomienie
 
-        // Funkcja do pobierania prawdziwych danych z NOAA (przez proxy CORS)
+        // Funkcja do pobierania danych z hamqsl.com (działa na GitHub Pages!)
         async function fetchRealData() {
             try {
-                // Pobierz dane SFI i K-index z NOAA przez proxy CORS
-                const sfiResponse = await fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json');
-                const kindexResponse = await fetch('https://services.swpc.noaa.gov/products/planetary-k-index-forecast.json');
+                // To API jest specjalnie dla radioamatorów i działa bez CORS problemów
+                const response = await fetch('https://www.hamqsl.com/solarxml.php');
+                const xmlText = await response.text();
                 
-                // Przetwórz dane SFI
-                const sfiData = await sfiResponse.json();
-                const latestSFI = parseFloat(sfiData[sfiData.length - 1][4]); // 5ta kolumna to SFI
+                // Parsuj XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
                 
-                // Przetwórz dane K-index
-                const kindexData = await kindexResponse.json();
-                const latestKIndex = parseFloat(kindexData[kindexData.length - 1].kp); // Ostatni K-index
+                // Pobierz dane
+                const sfi = parseInt(xmlDoc.querySelector('solarflux')?.textContent || '0');
+                const kindex = parseInt(xmlDoc.querySelector('kindex')?.textContent || '0');
+                const aindex = parseInt(xmlDoc.querySelector('aindex')?.textContent || '0');
+                const xray = xmlDoc.querySelector('xray')?.textContent || 'N/A';
+                const timestamp = new Date().toLocaleString('pl-PL');
                 
-                // Oblicz A-index na podstawie K-index (uproszczone)
-                const aIndex = Math.round(Math.pow(10, latestKIndex / 3));
+                // Walidacja danych
+                if (sfi < 50 || sfi > 300 || kindex < 0 || kindex > 9) {
+                    throw new Error('Nieprawidłowe dane');
+                }
                 
                 return {
-                    sfi: Math.round(latestSFI),
-                    kindex: Math.round(latestKIndex),
-                    aindex: aIndex,
-                    timestamp: new Date().toLocaleString('pl-PL'),
+                    sfi: sfi,
+                    kindex: kindex,
+                    aindex: aindex,
+                    xray: xray,
+                    timestamp: timestamp,
                     source: 'live'
                 };
                 
             } catch (error) {
-                console.error('Błąd pobierania danych z NOAA:', error);
+                console.error('Błąd pobierania danych z hamqsl.com:', error);
                 return null; // Zwróć null jeśli nie udało się pobrać
             }
         }
@@ -436,6 +433,7 @@
                 sfi: 145,
                 kindex: 2,
                 aindex: 8,
+                xray: 'B1.2',
                 timestamp: new Date().toLocaleString('pl-PL'),
                 source: 'mock'
             };
@@ -489,16 +487,10 @@
                 // Jeśli nie udało się, użyj mock danych
                 if (!data) {
                     data = getMockData();
-                    document.getElementById('data-source-info').innerHTML = `
-                        <strong>⚠️ Używam danych symulowanych</strong><br>
-                        Nie udało się pobrać danych z NOAA. Strona używa danych testowych.
-                    `;
+                    document.getElementById('data-source-info').innerHTML = '⚠️ Dane symulowane (brak połączenia z hamqsl.com)';
                     document.getElementById('data-source-info').className = 'data-source mock';
                 } else {
-                    document.getElementById('data-source-info').innerHTML = `
-                        <strong>✅ Dane w czasie rzeczywistym</strong><br>
-                        Dane pobrane z NOAA Space Weather Prediction Center.
-                    `;
+                    document.getElementById('data-source-info').innerHTML = '✅ Dane z hamqsl.com (aktualne)';
                     document.getElementById('data-source-info').className = 'data-source live';
                 }
                 
