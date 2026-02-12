@@ -71,11 +71,11 @@
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #444;
-            font-size: 0.8em;
-            color: #777;
+            font-size: 0.85em;
+            font-weight: bold;
         }
-        .data-source.live { color: #4ade80; font-weight: bold; }
-        .data-source.mock { color: #fbbf24; font-weight: bold; }
+        .data-source.live { color: #4ade80; }
+        .data-source.mock { color: #fbbf24; }
         .status {
             display: flex;
             justify-content: space-between;
@@ -339,13 +339,9 @@
 
         <div class="sources">
             <h3>Źródła danych</h3>
-            <p><strong>SFI (Solar Flux Index)</strong> – mierzony codziennie w obserwatorium w <strong>Penticton, Kanada</strong> o godzinie 17:00 UTC.</p>
-            
-            <p><strong>K-index i A-index</strong> – mierzą aktywność geomagnetyczną Ziemi.</p>
-            
-            <p><strong>Dane pochodzą z:</strong></p>
+            <p>Dane pochodzą z:</p>
             <ul>
-                <li><a href="https://www.hamqsl.com/solar.html" target="_blank">hamqsl.com</a> – specjalnie dla radioamatorów</li>
+                <li><a href="https://www.hamqsl.com/solar.html" target="_blank">hamqsl.com</a> – specjalnie dla radioamatorów (przez proxy CORS)</li>
                 <li><a href="https://prop.kc2g.com" target="_blank">prop.kc2g.com</a> – wizualizacja propagacji</li>
             </ul>
             
@@ -389,51 +385,79 @@
         setInterval(updateClock, 1000);
         updateClock(); // Natychmiastowe uruchomienie
 
-        // Funkcja do pobierania danych z hamqsl.com (działa na GitHub Pages!)
+        // Funkcja do pobierania danych przez proxy CORS
         async function fetchRealData() {
             try {
-                // To API jest specjalnie dla radioamatorów i działa bez CORS problemów
-                const response = await fetch('https://www.hamqsl.com/solarxml.php');
+                // Używamy corsproxy.io żeby ominąć blokadę CORS
+                const proxyUrl = 'https://corsproxy.io/?';
+                const targetUrl = 'https://www.hamqsl.com/solarxml.php';
+                const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const xmlText = await response.text();
                 
                 // Parsuj XML
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(xmlText, "text/xml");
                 
+                // Sprawdź czy XML się poprawnie sparsował
+                if (xmlDoc.querySelector('parsererror')) {
+                    throw new Error('Błąd parsowania XML');
+                }
+                
                 // Pobierz dane
-                const sfi = parseInt(xmlDoc.querySelector('solarflux')?.textContent || '0');
-                const kindex = parseInt(xmlDoc.querySelector('kindex')?.textContent || '0');
-                const aindex = parseInt(xmlDoc.querySelector('aindex')?.textContent || '0');
-                const xray = xmlDoc.querySelector('xray')?.textContent || 'N/A';
+                const solarfluxEl = xmlDoc.querySelector('solarflux');
+                const kindexEl = xmlDoc.querySelector('kindex');
+                const aindexEl = xmlDoc.querySelector('aindex');
+                
+                if (!solarfluxEl || !kindexEl || !aindexEl) {
+                    throw new Error('Brak wymaganych elementów w XML');
+                }
+                
+                const sfi = parseInt(solarfluxEl.textContent || '0');
+                const kindex = parseInt(kindexEl.textContent || '0');
+                const aindex = parseInt(aindexEl.textContent || '0');
                 const timestamp = new Date().toLocaleString('pl-PL');
                 
                 // Walidacja danych
-                if (sfi < 50 || sfi > 300 || kindex < 0 || kindex > 9) {
-                    throw new Error('Nieprawidłowe dane');
+                if (sfi < 50 || sfi > 300 || isNaN(sfi)) {
+                    throw new Error('Nieprawidłowy SFI');
+                }
+                if (kindex < 0 || kindex > 9 || isNaN(kindex)) {
+                    throw new Error('Nieprawidłowy K-index');
                 }
                 
                 return {
                     sfi: sfi,
                     kindex: kindex,
                     aindex: aindex,
-                    xray: xray,
                     timestamp: timestamp,
                     source: 'live'
                 };
                 
             } catch (error) {
-                console.error('Błąd pobierania danych z hamqsl.com:', error);
+                console.error('Błąd pobierania danych:', error);
                 return null; // Zwróć null jeśli nie udało się pobrać
             }
         }
 
         // Mock dane jako fallback
         function getMockData() {
+            // Generuj realistyczne mock dane na podstawie pory dnia
+            const now = new Date();
+            const hour = now.getUTCHours();
+            
+            // Wieczorem K-index zwykle niższy, SFI stabilny
+            let sfi = 130 + Math.floor(Math.random() * 30) - 15;
+            let kindex = hour >= 20 || hour < 8 ? 1 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 3);
+            
             return {
-                sfi: 145,
-                kindex: 2,
-                aindex: 8,
-                xray: 'B1.2',
+                sfi: sfi,
+                kindex: kindex,
+                aindex: Math.round(kindex * 8),
                 timestamp: new Date().toLocaleString('pl-PL'),
                 source: 'mock'
             };
@@ -481,16 +505,16 @@
             refreshBtn.disabled = true;
 
             try {
-                // Najpierw spróbuj pobrać prawdziwe dane
+                // Najpierw spróbuj pobrać prawdziwe dane przez proxy
                 let data = await fetchRealData();
                 
                 // Jeśli nie udało się, użyj mock danych
                 if (!data) {
                     data = getMockData();
-                    document.getElementById('data-source-info').innerHTML = '⚠️ Dane symulowane (brak połączenia z hamqsl.com)';
+                    document.getElementById('data-source-info').textContent = '⚠️ Dane symulowane (brak połączenia)';
                     document.getElementById('data-source-info').className = 'data-source mock';
                 } else {
-                    document.getElementById('data-source-info').innerHTML = '✅ Dane z hamqsl.com (aktualne)';
+                    document.getElementById('data-source-info').textContent = '✅ Dane na żywo z hamqsl.com';
                     document.getElementById('data-source-info').className = 'data-source live';
                 }
                 
