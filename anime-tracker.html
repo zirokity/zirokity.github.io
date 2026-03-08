@@ -1204,7 +1204,7 @@ header {
 .key-screen {
   position: fixed;
   inset: 0;
-  background: var(--bg);
+  background: #0c0c0e;
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -1235,20 +1235,21 @@ header {
   font-weight: 800;
   letter-spacing: -0.02em;
   text-align: center;
+  color: #e8e8f0;
 }
 
-.key-logo span { color: var(--watch); }
+.key-logo span { color: #3b82f6; }
 
 .key-tagline {
   text-align: center;
   font-size: 13px;
-  color: var(--text3);
+  color: #44445a;
   margin-top: -18px;
 }
 
 .key-card {
-  background: var(--bg1);
-  border: 1px solid var(--line);
+  background: #111114;
+  border: 1px solid #2a2a35;
   border-radius: 16px;
   padding: 28px;
   display: flex;
@@ -1261,7 +1262,7 @@ header {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text3);
+  color: #44445a;
   margin-bottom: 8px;
 }
 
@@ -1426,12 +1427,21 @@ header {
     <div class="key-tagline">Twoja osobista lista anime</div>
 
     <div class="key-card" id="keyCard">
-      <!-- filled by JS -->
+      <div>
+        <div class="key-section-title">Masz już klucz? Wpisz go tutaj</div>
+        <div class="key-input-row">
+          <input class="key-input" id="keyInputField" placeholder="np. A3F2-9KX1-BQ47-ZM8W" maxlength="19" spellcheck="false" autocomplete="off">
+          <button class="key-btn primary" onclick="enterKey()">Wejdź</button>
+        </div>
+        <div id="keyError" style="font-size:11px;color:#ef4444;margin-top:6px;display:none">❌ Nie znaleziono listy dla tego klucza.</div>
+      </div>
+      <div class="key-divider">lub</div>
+      <button class="key-new-btn" onclick="createNewKey()">✨ Utwórz nową listę</button>
     </div>
 
-    <div class="key-info">
+    <div class="key-info" style="color:#44445a;font-size:11px;text-align:center;line-height:1.6">
       🔐 Klucz to jedyny sposób dostępu do Twojej listy.<br>
-      <strong>Zapisz go w bezpiecznym miejscu!</strong>
+      <strong style="color:#8888a0">Zapisz go w bezpiecznym miejscu!</strong>
     </div>
   </div>
 </div>
@@ -1577,6 +1587,14 @@ header {
     <div class="t-title" id="tt"></div>
     <div class="t-sub"   id="ts"></div>
   </div>
+</div>
+
+<!-- ENRICH PROGRESS BAR -->
+<div class="enrich-bar" id="enrichBar">
+  <div class="enrich-bar-label">🖼 Pobieranie okładek</div>
+  <div class="enrich-bar-track"><div class="enrich-bar-fill" id="enrichFill"></div></div>
+  <div class="enrich-bar-count" id="enrichCount">0 / 0</div>
+  <div class="enrich-bar-sub" id="enrichSub">proszę czekać…</div>
 </div>
 
 <script>
@@ -2714,17 +2732,36 @@ document.getElementById('csvModal').addEventListener('click', e => {
 // ════════════════════
 //  INIT
 // ════════════════════
-initKeyScreen();
-refreshStats();
-renderGrid();
-</script>
-<!-- ENRICH PROGRESS BAR -->
-<div class="enrich-bar" id="enrichBar">
-  <div class="enrich-bar-label">🖼 Pobieranie okładek</div>
-  <div class="enrich-bar-track"><div class="enrich-bar-fill" id="enrichFill"></div></div>
-  <div class="enrich-bar-count" id="enrichCount">0 / 0</div>
-  <div class="enrich-bar-sub" id="enrichSub">proszę czekać…</div>
-</div>
+document.addEventListener('DOMContentLoaded', () => {
+  // Bind auto-format to the static key input in HTML
+  const staticInp = document.getElementById('keyInputField');
+  if (staticInp) {
+    staticInp.addEventListener('input', () => {
+      let v = staticInp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+      let out = '';
+      for (let i=0;i<v.length&&i<16;i++){if(i>0&&i%4===0)out+='-';out+=v[i];}
+      staticInp.value = out;
+    });
+    staticInp.addEventListener('keydown', e => { if(e.key==='Enter') enterKey(); });
+  }
 
+  try {
+    // Check for returning user — override static HTML with welcome back screen
+    const saved = localStorage.getItem('anime_access_key');
+    if (saved && localStorage.getItem(getStorageKey(saved)) !== null) {
+      initKeyScreen(); // shows "welcome back" card
+    }
+    refreshStats();
+    renderGrid();
+  } catch(e) {
+    const kc = document.getElementById('keyCard');
+    if (kc) kc.innerHTML = `
+      <div style="color:#ef4444;font-size:13px;line-height:1.7">
+        ⚠️ Błąd: <code style="font-size:11px;color:#e8e8f0">${e.message}</code><br><br>
+        Odśwież stronę (Ctrl+F5).
+      </div>`;
+  }
+});
+</script>
 </body>
 </html>
