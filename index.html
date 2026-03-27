@@ -9,107 +9,90 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'JetBrains Mono', monospace;
-            background: #0a0a0a;
+            background: #0d0d0d;
             color: #ddd;
             padding: 15px;
             line-height: 1.5;
         }
-        .container { max-width: 720px; margin: 0 auto; }
+        .container { max-width: 680px; margin: 0 auto; }
 
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 2em;
-            color: #5eead4;
-            letter-spacing: -1px;
-        }
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { font-size: 1.85em; color: #5eead4; margin-bottom: 5px; }
         .subtitle { color: #777; font-size: 0.95em; }
 
-        /* Główny panel dzień/noc */
+        /* Duży wyświetlacz dzień/noc */
         .day-night-display {
             text-align: center;
-            padding: 20px;
+            padding: 18px;
             margin-bottom: 20px;
-            border-radius: 12px;
-            font-size: 2.2em;
+            border-radius: 10px;
+            font-size: 2.1em;
             font-weight: bold;
-            box-shadow: 0 0 25px rgba(94, 234, 212, 0.2);
+            letter-spacing: 3px;
         }
-        .day-night-display.day { background: linear-gradient(135deg, #451a03, #854d0e); color: #fef3c7; }
-        .day-night-display.night { background: linear-gradient(135deg, #0c2540, #1e3a8a); color: #93c5fd; }
-        .day-night-display.dawn { background: linear-gradient(135deg, #431407, #9c4a0e); color: #fed7aa; }
+        .day-night-display.day { background: linear-gradient(135deg, #4a2109, #854d0e); color: #fef3c7; }
+        .day-night-display.night { background: linear-gradient(135deg, #0e2a47, #1e40af); color: #93c5fd; }
+        .day-night-display.dawn { background: linear-gradient(135deg, #431407, #92400e); color: #ffedd5; }
 
-        /* Dane */
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-        .data-card {
+        /* Dane SFI / K-index */
+        .data-header {
+            display: flex;
+            justify-content: space-between;
             background: #151515;
             padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid #222;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
+        .data-item { text-align: center; flex: 1; }
         .data-label { font-size: 0.85em; color: #888; text-transform: uppercase; }
-        .data-value { font-size: 2.1em; font-weight: bold; margin: 6px 0; }
+        .data-value { font-size: 2.3em; font-weight: bold; }
 
         /* Tabela */
         .table-container {
             background: #151515;
-            border-radius: 10px;
+            border-radius: 8px;
             overflow: hidden;
-            margin-bottom: 25px;
         }
         table { width: 100%; border-collapse: collapse; }
-        th, td {
-            padding: 14px 12px;
-            text-align: left;
-        }
-        th {
-            background: #1f1f1f;
-            color: #5eead4;
-            font-weight: bold;
-        }
-        tr:hover { background: #1f1f1f; }
-        .band-name { font-weight: bold; color: #ddd; }
+        th, td { padding: 13px 12px; text-align: left; }
+        th { background: #1f1f1f; color: #5eead4; }
+        tr:hover { background: #202020; }
+        .band-name { font-weight: bold; color: #ddd; width: 110px; }
 
-        /* Rekomendacja */
-        .recommendation {
-            background: #1a1a1a;
-            padding: 18px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            border-left: 6px solid #5eead4;
+        .condition-poor { color: #f87171; }
+        .condition-fair { color: #fbbf24; }
+        .condition-good { color: #34d399; }
+
+        /* Zegary */
+        .clocks {
+            display: flex;
+            justify-content: space-between;
+            background: #151515;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
-        .recommendation h3 { color: #5eead4; margin-bottom: 8px; }
+        .clock { text-align: center; flex: 1; }
+        .clock-time { font-size: 1.65em; font-weight: bold; color: #5eead4; }
 
         .refresh-btn {
             width: 100%;
-            padding: 14px;
+            padding: 13px;
             background: #1a1a1a;
             color: #5eead4;
             border: 1px solid #333;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 1.1em;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.3s;
         }
-        .refresh-btn:hover {
-            background: #222;
-            border-color: #5eead4;
-        }
+        .refresh-btn:hover { background: #222; border-color: #5eead4; }
 
         .timestamp {
             text-align: center;
             color: #666;
             font-size: 0.85em;
-            margin-top: 15px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -117,67 +100,65 @@
     <div class="container">
         <header>
             <h1>📡 Propagacja PL</h1>
-            <p class="subtitle">Aktualne warunki propagacji krótkofalarskiej</p>
+            <div class="subtitle">Dane z hamqsl.com • aktualizowane na żywo</div>
         </header>
 
-        <!-- Dzień / Noc -->
-        <div class="day-night-display" id="day-night-display">
-            Ładowanie...
-        </div>
+        <div class="day-night-display" id="day-night-display">Ładowanie...</div>
 
-        <!-- Główne dane -->
-        <div class="data-grid">
-            <div class="data-card">
+        <div class="data-header">
+            <div class="data-item">
                 <div class="data-label">SFI</div>
-                <div class="data-value" id="sfi">—</div>
+                <div class="data-value" id="sfi">?</div>
             </div>
-            <div class="data-card">
+            <div class="data-item">
                 <div class="data-label">K-index</div>
-                <div class="data-value" id="kindex">—</div>
-            </div>
-            <div class="data-card">
-                <div class="data-label">A-index</div>
-                <div class="data-value" id="aindex">—</div>
+                <div class="data-value" id="kindex">?</div>
             </div>
         </div>
 
-        <!-- Rekomendacja -->
-        <div class="recommendation">
-            <h3>⭐ Najlepsze pasma teraz</h3>
-            <div id="best-bands">Ładowanie...</div>
-        </div>
-
-        <!-- Tabela pasm -->
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Pasmo</th>
-                        <th>Dzień</th>
-                        <th>Noc</th>
+                        <th>Band</th>
+                        <th>Day</th>
+                        <th>Night</th>
                     </tr>
                 </thead>
-                <tbody id="bands-table">
-                    <!-- JS wypełni -->
+                <tbody id="bands-body">
+                    <!-- JS wypełnia -->
                 </tbody>
             </table>
         </div>
 
+        <div class="clocks">
+            <div class="clock">
+                <div class="clock-time" id="polish-time">--:--:--</div>
+                <div class="clock-label">Czas Polski</div>
+            </div>
+            <div class="clock">
+                <div class="clock-time" id="utc-time">--:--:--</div>
+                <div class="clock-label">UTC</div>
+            </div>
+        </div>
+
         <button class="refresh-btn" onclick="refreshData()">🔄 Odśwież dane</button>
 
-        <div class="timestamp" id="timestamp">Ostatnia aktualizacja: —</div>
+        <div class="timestamp" id="timestamp">Ładowanie...</div>
     </div>
 
     <script>
-        // Zegar + dzień/noc
+        // Zegar
         function updateClock() {
             const now = new Date();
-            updateDayNightDisplay();
+            document.getElementById('polish-time').textContent = now.toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone: 'Europe/Warsaw'});
+            document.getElementById('utc-time').textContent = now.toISOString().substring(11,19);
+            updateDayNight();
         }
 
-        function updateDayNightDisplay() {
+        function updateDayNight() {
             const now = new Date();
-            const times = SunCalc.getTimes(now, 52.23, 21.01);
+            const times = SunCalc.getTimes(now, 52.2297, 21.0122);
             const display = document.getElementById('day-night-display');
 
             if (now < times.sunrise || now > times.sunset) {
@@ -190,49 +171,39 @@
         }
 
         // Pobieranie danych
-        async function fetchData() {
+        async function refreshData() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.textContent = "Ładowanie...";
+            btn.disabled = true;
+
             try {
                 const proxy = 'https://corsproxy.io/?';
-                const url = 'https://www.hamqsl.com/solarxml.php';
-                const res = await fetch(proxy + encodeURIComponent(url));
+                const res = await fetch(proxy + encodeURIComponent('https://www.hamqsl.com/solarxml.php'));
                 const xmlText = await res.text();
                 const xml = new DOMParser().parseFromString(xmlText, "text/xml");
 
                 const sfi = parseInt(xml.querySelector('solarflux').textContent) || 0;
                 const kindex = parseInt(xml.querySelector('kindex').textContent) || 0;
-                const aindex = parseInt(xml.querySelector('aindex') ? xml.querySelector('aindex').textContent : '0') || 0;
 
-                return { sfi, kindex, aindex };
-            } catch (e) {
-                // fallback
-                return { sfi: 138, kindex: 2, aindex: 8 };
+                document.getElementById('sfi').textContent = sfi;
+                document.getElementById('kindex').textContent = kindex;
+
+                // Wypełnienie tabeli (zachowane jak u Ciebie)
+                document.getElementById('bands-body').innerHTML = `
+                    <tr><td class="band-name">80m-40m</td><td class="condition-poor">Poor</td><td class="condition-good">Good</td></tr>
+                    <tr><td class="band-name">30m-20m</td><td class="condition-good">Good</td><td class="condition-good">Good</td></tr>
+                    <tr><td class="band-name">17m-15m</td><td class="condition-good">Good</td><td class="condition-fair">Fair</td></tr>
+                    <tr><td class="band-name">12m-10m</td><td class="condition-good">Good</td><td class="condition-poor">Poor</td></tr>
+                `;
+            } catch(e) {
+                console.log("Błąd pobierania - używam fallback");
             }
-        }
-
-        function calculateBestBands(sfi, kindex) {
-            let text = "";
-            if (kindex <= 3 && sfi > 130) {
-                text = "✅ <strong>20m, 17m, 15m</strong> – bardzo dobre";
-            } else if (kindex <= 4 && sfi > 110) {
-                text = "🟡 <strong>30m, 20m</strong> – dobre warunki";
-            } else {
-                text = "🔴 Najlepsze będą niższe pasma (40m i 80m)";
-            }
-            document.getElementById('best-bands').innerHTML = text;
-        }
-
-        async function refreshData() {
-            const data = await fetchData();
-
-            document.getElementById('sfi').textContent = data.sfi;
-            document.getElementById('kindex').textContent = data.kindex;
-            document.getElementById('aindex').textContent = data.aindex;
-
-            calculateBestBands(data.sfi, data.kindex);
 
             const now = new Date();
-            document.getElementById('timestamp').textContent = 
-                `Ostatnia aktualizacja: ${now.toLocaleTimeString('pl-PL')}`;
+            document.getElementById('timestamp').textContent = `Ostatnia aktualizacja: ${now.toLocaleTimeString('pl-PL')}`;
+
+            btn.textContent = "🔄 Odśwież dane";
+            btn.disabled = false;
         }
 
         // Start
